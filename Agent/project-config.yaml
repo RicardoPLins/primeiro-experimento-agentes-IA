@@ -1,0 +1,84 @@
+schema: sdd-full
+context: |
+  Projeto: gerenciador-provas
+  Tipo: Aplicação web para criação de provas, geração de PDFs e correção automatizada
+  Linguagem: TypeScript (Frontend: React 18+, Backend: Node.js 20+)
+  Banco de dados padrão: MongoDB 7+ (coleções de domínio + índices explícitos)
+  Sistema de build: npm workspaces (monorepo — packages/frontend, packages/backend, packages/shared)
+  Repositório: acesso completo de escrita
+  Contexto acadêmico: Ferramenta para professores gerenciarem provas de múltipla escolha,
+    gerar variantes embaralhadas em PDF e corrigir respostas dos alunos via CSV.
+
+  REGRA CRÍTICA — Greenfield tornando-se brownfield:
+  Antes de qualquer funcionalidade ser construída, as specs documentam o comportamento PRETENDIDO (fase greenfield).
+  Uma vez que uma funcionalidade esteja implementada, as specs passam a documentar apenas o comportamento ATUAL.
+  Mudanças futuras sempre seguem o fluxo OpenSpec (proposta -> specs -> design -> tarefas).
+  Não criar specs aspiracionais para funcionalidades já implementadas.
+
+  Domínios de Spec:
+  - questoes:  CRUD de questões — enunciado, N alternativas, flags de resposta correta
+  - provas:    CRUD de provas — seleção de questões, modo de identificação (letras | potências de 2)
+  - pdf:       Geração de PDF — embaralhamento, cabeçalho, rodapé, layout de resposta, exportação do gabarito CSV
+  - correcao:  Motor de correção — modos rigoroso e menos rigoroso, entrada CSV gabarito + CSV respostas, relatório de notas
+  - frontend:  Interface React/TypeScript — roteamento, formulários, gerenciamento de estado, pré-visualização de PDF
+  - backend:   API REST Node/TypeScript — controllers, services, camada de persistência
+  - testes:    Suite BDD Cucumber/Gherkin — arquivos .feature, definições de passos em TypeScript
+
+  Persistência (MongoDB):
+  - Driver recomendado: Mongoose (ou driver oficial MongoDB quando necessário)
+  - IDs: `_id` (ObjectId interno) + `id` (UUID v4 público no domínio)
+  - Coleções base: questoes, provas, provas_individuais, gabaritos, correcoes
+  - Índices mínimos: `id` único por coleção; `(provaId, numero)` em provas_individuais
+  - Operações multi-documento críticas DEVEM usar transações com session
+  - Configuração via ambiente: MONGODB_URI, MONGODB_DB_NAME, MONGODB_POOL_MIN, MONGODB_POOL_MAX
+
+referencias:
+  docs:
+    - SKILL.md
+
+regras:
+  specs:
+    - "Specs documentam o comportamento ATUAL (ou PRETENDIDO, para funcionalidades ainda não construídas)"
+    - "Usar palavras-chave RFC 2119 em português: DEVE, NÃO DEVE, DEVERIA, PODE"
+    - "Escrever cenários no formato DADO/QUANDO/ENTÃO/E — consistente com Gherkin"
+    - "IDs de invariante usam o formato INV-XXX-NN onde XXX é a abreviação do domínio:"
+    - "  QST = questoes | PRV = provas | PDF = geração de pdf | COR = correcao"
+    - "  FRT = frontend  | BKD = backend | TST = testes"
+    - "Toda lógica de identificação de alternativas (letras vs potências de 2) DEVE estar nas specs PRV ou PDF"
+    - "Regras de correção (zeros rigorosos vs deduções proporcionais) DEVEM estar nas specs COR"
+
+  tarefas:
+    - Incluir um grupo de Verificação final em toda lista de tarefas
+    - Anotar invocações de skill como itens de checkbox onde agregam valor
+    - "Em mudanças sdd-full, usar skills de componente diretamente — não orquestradores T0/T1"
+    - "Toda tarefa que toca lógica de domínio DEVE ter uma tarefa de arquivo .feature correspondente"
+
+  testes:
+    - "Todas as funcionalidades DEVEM ter pelo menos um arquivo Gherkin .feature em tests/features/<dominio>/"
+    - "Cenários DEVEM usar DADO/QUANDO/ENTÃO/E — nunca prosa livre"
+    - "Definições de passos DEVEM ser escritas em TypeScript em tests/steps/<dominio>/"
+    - "Cenários devem ser escritos em português do Brasil"
+    - "Cada variante de geração de PDF (letras vs potências de 2) DEVE ter seu próprio cenário"
+    - "Cenários de correção DEVEM cobrir os modos rigoroso e menos rigoroso"
+    - "Cenários de parsing de CSV DEVEM cobrir entradas malformadas (colunas faltando, número de prova inválido, etc.)"
+
+  convencoes_de_dominio:
+    - "Questão: uma questão fechada com 2 a N alternativas"
+    - "Alternativa: uma opção de resposta; possui descrição e booleano isCorreta"
+    - "Prova (template): o exame configurado — conjunto ordenado de questões + modo de identificação"
+    - "Prova individual: instância concreta embaralhada em PDF; identificada por número sequencial inteiro"
+    - "Colunas do Gabarito CSV: numero_prova, [resposta_q1, resposta_q2, ...]"
+    - "Modo LETRAS: espaço em branco para o aluno escrever as letras das alternativas marcadas"
+    - "Modo POTÊNCIAS DE 2: espaço em branco para o aluno escrever a soma das alternativas marcadas"
+    - "Correção rigorosa: qualquer seleção incorreta ou omissão em uma alternativa → nota da questão = 0"
+    - "Correção menos rigorosa: nota proporcional ao percentual de alternativas tratadas corretamente"
+
+  banco_de_dados:
+    - "A camada de persistência DEVE seguir padrão Repository; services não devem conter queries inline espalhadas"
+    - "A conexão MongoDB DEVE ser centralizada em módulo único com retry exponencial e fail-fast"
+    - "Toda coleção de domínio DEVE ter timestamps (createdAt, updatedAt)"
+    - "Campos de domínio `id` DEVEM ter índice único para estabilidade de integrações externas"
+    - "Exclusão de Questão vinculada a Prova DEVE ser bloqueada por regra de domínio"
+    - "Dados sensíveis (CPF/e-mail) NÃO DEVEM aparecer em logs de aplicação"
+    - "Testes de integração de persistência DEVEM usar banco isolado (mongodb-memory-server ou equivalente)"
+    - "Specs e tarefas que alterem persistência DEVEM incluir impacto em índices e cenários de migração de dados"
