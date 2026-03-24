@@ -72,7 +72,7 @@ export class QuestaoService {
     enunciado?: string,
     alternativas?: Alternativa[]
   ): Promise<Questao> {
-    const questao = await this.buscarPorId(id);
+    await this.buscarPorId(id);
 
     if (enunciado !== undefined && enunciado.trim().length === 0) {
       throw new ValidationError('Enunciado não pode estar vazio');

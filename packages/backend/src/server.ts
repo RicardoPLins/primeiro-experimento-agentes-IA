@@ -1,4 +1,4 @@
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Health-check endpoint
-app.get('/health', async (req: Request, res: Response) => {
+app.get('/health', async (_req: Request, res: Response) => {
   const isConnected = mongoConnection.isConnected();
   const status = isConnected ? 'ok' : 'database_unavailable';
   const statusCode = isConnected ? 200 : 503;
@@ -35,7 +35,7 @@ app.use('/api/questoes', questaoRoutes);
 app.use('/api/provas', provaRoutes);
 
 // Middleware de tratamento de erros global
-app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
+app.use((err: unknown, _req: Request, res: Response) => {
   if (err instanceof ApplicationError) {
     res.status(err.statusCode).json({
       code: err.code,
@@ -57,10 +57,10 @@ app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
 });
 
 // 404 handler
-app.use((req: Request, res: Response) => {
+app.use((_req: Request, res: Response) => {
   res.status(404).json({
     code: 'NOT_FOUND',
-    message: `Rota ${req.method} ${req.path} não encontrada`,
+    message: 'Rota não encontrada',
   });
 });
 

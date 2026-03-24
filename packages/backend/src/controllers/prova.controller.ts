@@ -47,7 +47,7 @@ export class ProvaController {
    * GET /provas
    * Listar todas as provas
    */
-  async listar(req: Request, res: Response): Promise<void> {
+  async listar(_req: Request, res: Response): Promise<void> {
     try {
       const provas = await provaService.listarTodas();
       res.status(200).json(provas);

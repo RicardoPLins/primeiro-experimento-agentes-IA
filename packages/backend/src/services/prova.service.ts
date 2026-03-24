@@ -2,7 +2,6 @@ import { Prova, Identificacao } from '@gerenciador-provas/shared';
 import provaRepository from '../repositories/prova.repository';
 import questaoService from './questao.service';
 import { ValidationError, NotFoundError } from '../errors/ApplicationError';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Service de Prova
@@ -76,7 +75,7 @@ export class ProvaService {
     id: string,
     atualizacoes: Partial<Prova>
   ): Promise<Prova> {
-    const prova = await this.buscarPorId(id);
+    await this.buscarPorId(id);
 
     if (atualizacoes.questoes && atualizacoes.questoes.length !== 5) {
       throw new ValidationError('Prova deve ter exatamente 5 questões', {

@@ -39,7 +39,7 @@ export class QuestaoController {
    * GET /questoes
    * Listar todas as questões
    */
-  async listar(req: Request, res: Response): Promise<void> {
+  async listar(_req: Request, res: Response): Promise<void> {
     try {
       const questoes = await questaoService.listarTodas();
       res.status(200).json(questoes);

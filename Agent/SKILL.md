@@ -113,7 +113,7 @@ tests/
 
 ### 3.3 Persistência MongoDB (Backend)
 
-#### 3.5.1 Stack e configuração
+#### 3.3.1 Stack e configuração
 - Banco padrão do projeto: **MongoDB 7+**.
 - Driver recomendado: **Mongoose** (ou driver oficial MongoDB quando explicitamente necessário).
 - Variáveis de ambiente obrigatórias no backend:
@@ -123,7 +123,7 @@ tests/
   - `MONGODB_SERVER_SELECTION_TIMEOUT_MS`
 - A inicialização da conexão DEVE ocorrer em um módulo único (`database/mongo.ts`) com retry exponencial e fail-fast quando não conectar.
 
-#### 3.5.2 Modelagem e coleções
+#### 3.3.2 Modelagem e coleções
 - Coleções sugeridas:
   - `questoes`
   - `provas`
@@ -138,19 +138,19 @@ tests/
 - Em `provas_individuais`, índice composto DEVE existir para `(provaId, numero)`.
 - O mapeamento de embaralhamento DEVE ser persistido para reprodutibilidade e auditoria.
 
-#### 3.5.3 Regras de integridade e desempenho
+#### 3.3.3 Regras de integridade e desempenho
 - Integridade referencial DEVE ser garantida na camada de serviço (MongoDB não impõe FK nativamente).
 - Exclusão de `Questão` referenciada por `Prova` DEVE ser bloqueada por regra de domínio.
 - Operações multi-documento críticas (ex.: geração em lote de provas + gabaritos) DEVEM usar transações com `session`.
 - Consultas frequentes DEVERIAM ter índices explícitos revisados por domínio de uso.
 - Campos grandes (ex.: conteúdo de PDF em binário) NÃO DEVEM ser salvos na mesma coleção de domínio; usar armazenamento externo + referência.
 
-#### 3.5.4 Segurança e observabilidade
+#### 3.3.4 Segurança e observabilidade
 - `MONGODB_URI` NÃO DEVE ser commitado; usar `.env` e cofre de segredos no ambiente alvo.
 - Logs NÃO DEVEM expor credenciais nem dados sensíveis de alunos (CPF completo, e-mail completo).
 - Health-check do backend DEVE validar estado da conexão MongoDB.
 
-#### 3.5.5 Testes com MongoDB
+#### 3.3.5 Testes com MongoDB
 - Testes de integração de repositório/serviço DEVEM usar MongoDB isolado por teste (ex.: `mongodb-memory-server`).
 - Cada cenário de teste DEVE limpar coleções entre execuções para evitar acoplamento.
 - Cenários de erro DEVEM cobrir: timeout de conexão, índice único violado e documento não encontrado.
