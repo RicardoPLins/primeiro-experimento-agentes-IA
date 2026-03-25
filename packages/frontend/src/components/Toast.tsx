@@ -1,7 +1,13 @@
 import { FC } from 'react';
 import { useUiStore } from '../store/uiStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Info, XCircle, X } from 'lucide-react';
+import { Alert, IconButton } from '@mui/material';
+import {
+  CheckCircle as CheckCircleIcon,
+  Info as InfoIcon,
+  Error as ErrorIcon,
+  Close as CloseIcon,
+} from '@mui/icons-material';
 
 export const Toast: FC = () => {
   const { toast, hideToast } = useUiStore();
@@ -10,20 +16,20 @@ export const Toast: FC = () => {
 
   const config = {
     success: {
-      bg: 'bg-green-500',
-      icon: CheckCircle,
+      severity: 'success' as const,
+      icon: <CheckCircleIcon />,
     },
     error: {
-      bg: 'bg-red-500',
-      icon: XCircle,
+      severity: 'error' as const,
+      icon: <ErrorIcon />,
     },
     info: {
-      bg: 'bg-blue-500',
-      icon: Info,
+      severity: 'info' as const,
+      icon: <InfoIcon />,
     },
   };
 
-  const Icon = config[toast.type].icon;
+  const currentConfig = config[toast.type];
 
   return (
     <AnimatePresence>
@@ -32,16 +38,32 @@ export const Toast: FC = () => {
         animate={{ opacity: 1, y: 0, x: 0 }}
         exit={{ opacity: 0, y: 20, x: 20 }}
         transition={{ duration: 0.3 }}
-        className={`fixed bottom-4 right-4 ${config[toast.type].bg} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 max-w-sm`}
       >
-        <Icon className="w-5 h-5 flex-shrink-0" />
-        <p className="flex-1">{toast.message}</p>
-        <button
-          onClick={hideToast}
-          className="flex-shrink-0 hover:opacity-80 transition"
+        <Alert
+          severity={currentConfig.severity}
+          action={
+            <IconButton
+              size="small"
+              color="inherit"
+              onClick={hideToast}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          }
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            maxWidth: 400,
+            boxShadow: 2,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          }}
         >
-          <X className="w-4 h-4" />
-        </button>
+          {toast.message}
+        </Alert>
       </motion.div>
     </AnimatePresence>
   );

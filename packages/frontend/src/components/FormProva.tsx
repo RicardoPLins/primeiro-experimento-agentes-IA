@@ -1,11 +1,28 @@
 import { FC, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Prova, Identificacao } from '@gerenciador-provas/shared';
 import { useQuestoes } from '../hooks/useQuestoes';
 import { useCriarProva, useAtualizarProva } from '../hooks/useProvas';
 import { useUiStore } from '../store/uiStore';
+import {
+  Box,
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  FormLabel,
+  Typography,
+  Card,
+  Checkbox,
+  Alert,
+  CircularProgress,
+  Paper,
+} from '@mui/material';
+import { Save as SaveIcon } from '@mui/icons-material';
+import { motion } from 'framer-motion';
 
 const provaSchema = z.object({
   nome: z.string().min(5, 'Nome deve ter mínimo 5 caracteres'),
@@ -30,7 +47,13 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
   const atualizarMutation = prova ? useAtualizarProva(prova.id) : null;
   const showToast = useUiStore((s) => s.showToast);
 
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormProvaData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+    control,
+  } = useForm<FormProvaData>({
     resolver: zodResolver(provaSchema),
     defaultValues: {
       nome: prova?.nome || '',
@@ -75,120 +98,184 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
     }
   };
 
+  const isLoading = criarMutation.isPending || atualizarMutation?.isPending;
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg p-6 shadow-md max-w-4xl">
-      <h2 className="text-2xl font-bold mb-6">{prova ? '✏️ Editar Prova' : '➕ Nova Prova'}</h2>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <Paper component="form" onSubmit={handleSubmit(onSubmit)} sx={{ p: 4, boxShadow: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 4 }}>
+          {prova ? '✏️ Editar Prova' : '➕ Nova Prova'}
+        </Typography>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Prova</label>
-          <input
-            {...register('nome')}
-            className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        {/* Form Fields */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 4 }}>
+          <TextField
+            label="Nome da Prova"
             placeholder="Ex: Prova de Biologia - Unidade 1"
+            {...register('nome')}
+            error={!!errors.nome}
+            helperText={errors.nome?.message}
+            fullWidth
           />
-          {errors.nome && <p className="text-red-500 text-sm mt-1">{errors.nome.message}</p>}
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Disciplina</label>
-          <input
-            {...register('disciplina')}
-            className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <TextField
+            label="Disciplina"
             placeholder="Ex: Biologia"
+            {...register('disciplina')}
+            error={!!errors.disciplina}
+            helperText={errors.disciplina?.message}
+            fullWidth
           />
-          {errors.disciplina && <p className="text-red-500 text-sm mt-1">{errors.disciplina.message}</p>}
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Professor</label>
-          <input
-            {...register('professor')}
-            className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <TextField
+            label="Professor"
             placeholder="Ex: Dr. João Silva"
+            {...register('professor')}
+            error={!!errors.professor}
+            helperText={errors.professor?.message}
+            fullWidth
           />
-          {errors.professor && <p className="text-red-500 text-sm mt-1">{errors.professor.message}</p>}
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Turma</label>
-          <input
-            {...register('turma')}
-            className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <TextField
+            label="Turma"
             placeholder="Ex: 3º A"
+            {...register('turma')}
+            error={!!errors.turma}
+            helperText={errors.turma?.message}
+            fullWidth
           />
-          {errors.turma && <p className="text-red-500 text-sm mt-1">{errors.turma.message}</p>}
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Data</label>
-          <input
-            {...register('data')}
+          <TextField
+            label="Data"
             type="date"
-            className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            {...register('data')}
+            error={!!errors.data}
+            helperText={errors.data?.message}
+            fullWidth
+            InputLabelProps={{ shrink: true }}
           />
-          {errors.data && <p className="text-red-500 text-sm mt-1">{errors.data.message}</p>}
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Identificação</label>
-          <select
-            {...register('identificacao')}
-            className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="LETRAS">Letras (A, B, C, D, E)</option>
-            <option value="POTENCIAS_DE_2">Potências de 2 (1, 2, 4, 8, 16)</option>
-          </select>
-          {errors.identificacao && (
-            <p className="text-red-500 text-sm mt-1">{errors.identificacao.message}</p>
-          )}
-        </div>
-      </div>
+          <FormControl fullWidth error={!!errors.identificacao}>
+            <FormLabel sx={{ mb: 1 }}>Tipo de Identificação</FormLabel>
+            <Controller
+              name="identificacao"
+              control={control}
+              render={({ field }) => (
+                <Select {...field} size="small">
+                  <MenuItem value="LETRAS">Letras (A, B, C, D, E)</MenuItem>
+                  <MenuItem value="POTENCIAS_DE_2">Potências de 2 (1, 2, 4, 8, 16)</MenuItem>
+                </Select>
+              )}
+            />
+          </FormControl>
+        </Box>
 
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Selecionar 5 Questões {questoesIds.length}/5
-        </label>
-        <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto border rounded-lg p-4 bg-gray-50">
+        {/* Questões Selection */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
+            Selecionar 5 Questões ({questoesIds.length}/5)
+          </Typography>
+
+          {errors.questoes && <Alert severity="error" sx={{ mb: 2 }}>{errors.questoes.message}</Alert>}
+
           {questoes.length === 0 ? (
-            <p className="text-gray-500">Nenhuma questão disponível. Crie questões primeiro.</p>
+            <Alert severity="info">Nenhuma questão disponível. Crie questões primeiro!</Alert>
           ) : (
-            questoes.map((questao) => (
-              <label key={questao.id} className="flex items-start gap-3 p-3 bg-white rounded hover:bg-blue-50 cursor-pointer">
-                <input
-                  {...register('questoes')}
-                  type="checkbox"
-                  value={questao.id}
-                  className="w-4 h-4 mt-1 accent-blue-600"
-                  disabled={questoesIds.length === 5 && !questoesIds.includes(questao.id)}
-                />
-                <div className="flex-1">
-                  <p className="text-sm font-medium line-clamp-2">{questao.enunciado}</p>
-                  <p className="text-xs text-gray-600">{questao.alternativas.length} alternativas</p>
-                </div>
-              </label>
-            ))
+            <Box sx={{ display: 'grid', gap: 2, maxHeight: 400, overflowY: 'auto' }}>
+              {questoes.map((questao) => (
+                <Card
+                  key={questao.id}
+                  sx={{
+                    p: 2,
+                    backgroundColor: questoesIds.includes(questao.id) ? '#e3f2fd' : '#fff',
+                    borderLeft: questoesIds.includes(questao.id) ? '4px solid #1976d2' : 'none',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                    <Controller
+                      name="questoes"
+                      control={control}
+                      render={({ field: { value, onChange } }) => (
+                        <Checkbox
+                          checked={value.includes(questao.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              if (value.length < 5) {
+                                onChange([...value, questao.id]);
+                              }
+                            } else {
+                              onChange(value.filter((id) => id !== questao.id));
+                            }
+                          }}
+                          disabled={questoesIds.length >= 5 && !questoesIds.includes(questao.id)}
+                          sx={{ mt: 0.5, flex: 'none' }}
+                        />
+                      )}
+                    />
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                        {questao.enunciado}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        {questao.alternativas.length} alternativas
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Card>
+              ))}
+            </Box>
           )}
-        </div>
-        {errors.questoes && <p className="text-red-500 text-sm mt-1">{errors.questoes.message}</p>}
-      </div>
+        </Box>
 
-      <div className="bg-blue-50 rounded-lg p-4 mb-6">
-        <h3 className="font-semibold mb-2">📋 Resumo</h3>
-        <ul className="text-sm text-gray-700 space-y-1">
-          <li>• <strong>{questoesSelecionadas.length}/5</strong> questões selecionadas</li>
-          <li>• Formato: <strong>{watch('identificacao')}</strong></li>
-          <li>• Total de alternativas: <strong>{questoesSelecionadas.reduce((sum, q) => sum + q.alternativas.length, 0)}</strong></li>
-        </ul>
-      </div>
+        {/* Selecionadas Preview */}
+        {questoesSelecionadas.length > 0 && (
+          <Box sx={{ mb: 4, p: 2, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2 }}>
+              Questões Selecionadas:
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {questoesSelecionadas.map((q, idx) => (
+                <Box
+                  key={q.id}
+                  sx={{
+                    backgroundColor: '#667eea',
+                    color: '#fff',
+                    px: 2,
+                    py: 1,
+                    borderRadius: 1,
+                    fontSize: '0.875rem',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {idx + 1}. {q.enunciado.substring(0, 30)}...
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
 
-      <button
-        type="submit"
-        disabled={criarMutation.isPending || atualizarMutation?.isPending}
-        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition"
-      >
-        {criarMutation.isPending || atualizarMutation?.isPending ? 'Salvando...' : 'Salvar Prova'}
-      </button>
-    </form>
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          variant="contained"
+          size="large"
+          startIcon={isLoading ? <CircularProgress size={20} /> : <SaveIcon />}
+          disabled={isLoading}
+          sx={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            textTransform: 'none',
+            fontWeight: 'bold',
+            py: 1.5,
+            px: 4,
+          }}
+        >
+          {isLoading ? 'Salvando...' : prova ? 'Atualizar Prova' : 'Criar Prova'}
+        </Button>
+      </Paper>
+    </motion.div>
   );
 };

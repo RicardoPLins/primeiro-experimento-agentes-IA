@@ -1,19 +1,34 @@
 import { FC } from 'react';
+import { Box, Container, Paper, Typography, Alert } from '@mui/material';
+import { motion } from 'framer-motion';
 
 export const ProvaIndividualPage: FC = () => {
   return (
-    <div className="p-6">
-      <div className="bg-white rounded-lg p-6 shadow-md">
-        <h1 className="text-3xl font-bold mb-4">📋 Criar Instância de Prova</h1>
-        <p className="text-gray-600 mb-4">
-          Esta funcionalidade permite embaralhar questões e alternativas para criar variantes individuais de uma prova.
-        </p>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
-            ⏳ Em desenvolvimento - voltaremos aqui após implementar PDF com embaralhamento
-          </p>
-        </div>
-      </div>
-    </div>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)',
+        py: 4,
+      }}
+    >
+      <Container maxWidth="md">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Paper sx={{ p: 4, boxShadow: 3 }}>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 2 }}>
+              📋 Criar Instância de Prova
+            </Typography>
+            <Typography color="textSecondary" sx={{ mb: 3 }}>
+              Esta funcionalidade permite embaralhar questões e alternativas para criar variantes individuais de uma prova.
+            </Typography>
+            <Alert severity="info" sx={{ textTransform: 'none' }}>
+              ⏳ Em desenvolvimento - voltaremos aqui após implementar PDF com embaralhamento
+            </Alert>
+          </Paper>
+        </motion.div>
+      </Container>
+    </Box>
   );
 };

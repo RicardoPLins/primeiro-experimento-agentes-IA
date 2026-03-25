@@ -1,242 +1,352 @@
-import { FC, useMemo } from 'react';
+import { FC } from 'react';
 import {
-  BarChart3,
-  BookOpen,
-  FileText,
-  Zap,
-  CheckCircle,
-  AlertCircle,
-  ArrowUpRight,
-} from 'lucide-react';
-import { StatCard, Card, Button } from '../components/ui';
+  LibraryBooks as BookOpenIcon,
+  Description as FileTextIcon,
+  BarChart as BarChartIcon,
+  ElectricBolt as ZapIcon,
+} from '@mui/icons-material';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Container,
+} from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 export const Dashboard: FC = () => {
   const navigate = useNavigate();
 
-  const stats = useMemo(
-    () => [
-      {
-        label: 'Total de Questões',
-        value: 0,
-        icon: <BookOpen className="w-8 h-8" />,
-        color: 'blue' as const,
-        trend: 'neutral' as const,
-      },
-      {
-        label: 'Provas Criadas',
-        value: 0,
-        icon: <FileText className="w-8 h-8" />,
-        color: 'green' as const,
-        trend: 'up' as const,
-        trendValue: 'Sem dados',
-      },
-      {
-        label: 'PDFs Gerados',
-        value: 0,
-        icon: <BarChart3 className="w-8 h-8" />,
-        color: 'purple' as const,
-        trend: 'neutral' as const,
-      },
-      {
-        label: 'Correções Processadas',
-        value: 0,
-        icon: <Zap className="w-8 h-8" />,
-        color: 'orange' as const,
-        trend: 'neutral' as const,
-      },
-    ],
-    []
-  );
+  const stats = [
+    {
+      label: 'Total de Questões',
+      value: 0,
+      icon: BookOpenIcon,
+      color: '#667eea',
+    },
+    {
+      label: 'Provas Criadas',
+      value: 0,
+      icon: FileTextIcon,
+      color: '#2e7d32',
+    },
+    {
+      label: 'PDFs Gerados',
+      value: 0,
+      icon: BarChartIcon,
+      color: '#9c27b0',
+    },
+    {
+      label: 'Correções Processadas',
+      value: 0,
+      icon: ZapIcon,
+      color: '#f57c00',
+    },
+  ];
 
   const steps = [
     {
       number: 1,
       title: 'Criar Questões',
       description: 'Adicione questões com múltiplas alternativas e marque as respostas corretas',
-      icon: <BookOpen className="w-6 h-6" />,
-      status: 'ready' as const,
+      icon: BookOpenIcon,
+      status: 'ready',
       action: () => navigate('/questoes'),
     },
     {
       number: 2,
       title: 'Montar Prova',
       description: 'Selecione 5 ou mais questões para compor sua prova',
-      icon: <FileText className="w-6 h-6" />,
-      status: 'ready' as const,
+      icon: FileTextIcon,
+      status: 'ready',
       action: () => navigate('/provas'),
     },
     {
       number: 3,
       title: 'Embaralhar',
       description: 'Configure o embaralhamento de questões e alternativas',
-      icon: <Zap className="w-6 h-6" />,
-      status: 'pending' as const,
+      icon: ZapIcon,
+      status: 'pending',
       action: () => {},
     },
     {
       number: 4,
       title: 'Gerar PDF',
       description: 'Exporte a prova em PDF pronta para impressão',
-      icon: <BarChart3 className="w-6 h-6" />,
-      status: 'pending' as const,
+      icon: BarChartIcon,
+      status: 'pending',
       action: () => {},
     },
   ];
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 },
-    },
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 p-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-        <p className="text-gray-600">
-          Bem-vindo ao Gerenciador de Provas - Crie, organize e exporte suas
-          avaliações
-        </p>
-      </motion.div>
-
-      {/* Stats Grid */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-      >
-        {stats.map((stat, idx) => (
-          <motion.div key={idx} variants={itemVariants}>
-            <StatCard
-              label={stat.label}
-              value={stat.value}
-              icon={stat.icon}
-              color={stat.color}
-              trend={stat.trend}
-              trendValue={stat.trendValue}
-            />
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {/* Getting Started Guide */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="mb-8"
-      >
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <Zap className="w-6 h-6 text-blue-600" />
-          Primeiros Passos
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {steps.map((step, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6 + idx * 0.1 }}
+    <Box
+      sx={{
+        py: 4,
+        px: 2,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        minHeight: 'calc(100vh - 200px)',
+      }}
+    >
+      <Container maxWidth="lg">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ mb: 6 }}>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 'bold',
+                color: '#fff',
+                mb: 1,
+              }}
             >
-              <Card className="h-full hover:shadow-lg">
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`flex items-center justify-center w-10 h-10 rounded-lg text-white flex-shrink-0 ${
-                      step.status === 'ready'
-                        ? 'bg-green-500'
-                        : 'bg-gray-300'
-                    }`}
-                  >
-                    {step.status === 'ready' ? (
-                      <CheckCircle className="w-5 h-5" />
-                    ) : (
-                      <AlertCircle className="w-5 h-5" />
-                    )}
-                  </div>
+              Dashboard
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+              Bem-vindo ao Gerenciador de Provas - Acompanhe suas questões e provas
+            </Typography>
+          </Box>
+        </motion.div>
 
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-2xl font-bold text-gray-900">
-                        {step.number}
-                      </span>
-                      <span className="text-sm font-semibold text-gray-600">
-                        {step.title}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">
-                      {step.description}
-                    </p>
-                    <Button
-                      variant={step.status === 'ready' ? 'primary' : 'ghost'}
-                      disabled={step.status === 'pending'}
-                      onClick={step.action}
-                      size="sm"
+        {/* Stats Grid */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 3, mb: 6 }}>
+          {stats.map((stat, idx) => {
+            const Icon = stat.icon;
+            return (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                <Card
+                  sx={{
+                    background: 'linear-gradient(135deg, #fff 0%, #f5f5f5 100%)',
+                    boxShadow: 3,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: 6,
+                    },
+                  }}
+                >
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <Box>
+                        <Typography color="textSecondary" gutterBottom>
+                          {stat.label}
+                        </Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 'bold', color: stat.color }}>
+                          {stat.value}
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          backgroundColor: stat.color,
+                          color: '#fff',
+                          p: 1.5,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Icon sx={{ fontSize: 24 }} />
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </Box>
+
+        {/* Steps Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Box sx={{ mb: 6 }}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 'bold',
+                color: '#fff',
+                mb: 3,
+              }}
+            >
+              ✨ Primeiros Passos
+            </Typography>
+
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 3 }}>
+              {steps.map((step, idx) => {
+                const Icon = step.icon;
+                const isReady = step.status === 'ready';
+
+                return (
+                  <Box key={idx}>
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 + idx * 0.1 }}
                     >
-                      {step.status === 'ready' ? (
-                        <>
-                          Começar <ArrowUpRight className="w-3 h-3" />
-                        </>
-                      ) : (
-                        'Em breve'
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
+                      <Card
+                        sx={{
+                          height: '100%',
+                          background: isReady
+                            ? 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)'
+                            : 'linear-gradient(135deg, #ccc 0%, #999 100%)',
+                          color: '#fff',
+                          cursor: isReady ? 'pointer' : 'default',
+                          transition: 'all 0.3s ease',
+                          '&:hover': isReady ? { transform: 'translateY(-5px)', boxShadow: 6 } : {},
+                          opacity: isReady ? 1 : 0.6,
+                        }}
+                        onClick={step.action}
+                      >
+                        <CardContent sx={{ textAlign: 'center' }}>
+                          <Box
+                            sx={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                              width: 60,
+                              height: 60,
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              mx: 'auto',
+                              mb: 2,
+                            }}
+                          >
+                            <Icon sx={{ fontSize: 32, color: '#fff' }} />
+                          </Box>
 
-      {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
-        className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-      >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h3>
-        <div className="flex flex-wrap gap-3">
-          <Button
-            variant="primary"
-            onClick={() => navigate('/questoes')}
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontWeight: 'bold',
+                              mb: 1,
+                              color: '#fff',
+                            }}
+                          >
+                            {step.number}. {step.title}
+                          </Typography>
+
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: 'rgba(255, 255, 255, 0.9)',
+                              mb: 2,
+                              minHeight: 40,
+                            }}
+                          >
+                            {step.description}
+                          </Typography>
+
+                          <Box
+                            sx={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                              borderRadius: 1,
+                              p: 1,
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: '#fff',
+                                fontWeight: 'bold',
+                              }}
+                            >
+                              {isReady ? '✅ Pronto' : '⏳ Em breve'}
+                            </Typography>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+        </motion.div>
+
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+        >
+          <Box
+            sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: 2,
+              p: 4,
+              boxShadow: 3,
+            }}
           >
-            ➕ Nova Questão
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => navigate('/provas')}
-          >
-            📋 Nova Prova
-          </Button>
-          <Button variant="outline">
-            📊 Ver Relatórios
-          </Button>
-        </div>
-      </motion.div>
-    </div>
+            <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3, color: '#333' }}>
+              🚀 Ações Rápidas
+            </Typography>
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => navigate('/questoes/nova')}
+                  sx={{
+                    flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)' },
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    py: 2,
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                  }}
+                >
+                  ➕ Criar Nova Questão
+                </Button>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => navigate('/provas/nova')}
+                  sx={{
+                    flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)' },
+                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                    py: 2,
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                  }}
+                >
+                  📝 Criar Nova Prova
+                </Button>
+              </Box>
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={() => navigate('/questoes')}
+                sx={{
+                  py: 2,
+                  fontWeight: 'bold',
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  color: '#667eea',
+                  borderColor: '#667eea',
+                  '&:hover': {
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderColor: '#667eea',
+                  },
+                }}
+              >
+                📋 Ver Todas as Questões
+              </Button>
+            </Box>
+          </Box>
+        </motion.div>
+      </Container>
+    </Box>
   );
 };

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
+import { Box } from '@mui/material';
 import { Sidebar } from './components/Sidebar';
 import { Toast } from './components/Toast';
 import { Dashboard } from './pages/Dashboard';
@@ -19,9 +20,17 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+        <Box sx={{ display: 'flex', height: '100vh', backgroundColor: '#f5f5f5' }}>
           <Sidebar />
-          <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+          <Box
+            component="main"
+            sx={{
+              flex: 1,
+              overflowY: 'auto',
+              background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+              minHeight: '100vh',
+            }}
+          >
             <Routes>
               <Route path="/" element={<Dashboard />} />
               
@@ -41,54 +50,78 @@ function App() {
               <Route
                 path="/pdf/:id"
                 element={
-                  <div className="p-6 flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <div className="text-6xl mb-4">🖨️</div>
-                      <h2 className="text-2xl font-bold text-gray-900">
+                  <Box
+                    sx={{
+                      p: 6,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '100%',
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Box sx={{ fontSize: '4rem', mb: 2 }}>🖨️</Box>
+                      <Box sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#333', mb: 1 }}>
                         Gerador de PDF
-                      </h2>
-                      <p className="text-gray-600 mt-2">
+                      </Box>
+                      <Box sx={{ color: '#666' }}>
                         Esta funcionalidade está em desenvolvimento
-                      </p>
-                    </div>
-                  </div>
+                      </Box>
+                    </Box>
+                  </Box>
                 }
               />
               <Route
                 path="/correcao"
                 element={
-                  <div className="p-6 flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <div className="text-6xl mb-4">✅</div>
-                      <h2 className="text-2xl font-bold text-gray-900">
-                        Motor de Correção
-                      </h2>
-                      <p className="text-gray-600 mt-2">
+                  <Box
+                    sx={{
+                      p: 6,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '100%',
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Box sx={{ fontSize: '4rem', mb: 2 }}>✅</Box>
+                      <Box sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#333', mb: 1 }}>
+                        Correção de Provas
+                      </Box>
+                      <Box sx={{ color: '#666' }}>
                         Esta funcionalidade está em desenvolvimento
-                      </p>
-                    </div>
-                  </div>
+                      </Box>
+                    </Box>
+                  </Box>
                 }
               />
               <Route
                 path="/relatorio"
                 element={
-                  <div className="p-6 flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <div className="text-6xl mb-4">📊</div>
-                      <h2 className="text-2xl font-bold text-gray-900">
+                  <Box
+                    sx={{
+                      p: 6,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '100%',
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Box sx={{ fontSize: '4rem', mb: 2 }}>📊</Box>
+                      <Box sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#333', mb: 1 }}>
                         Relatórios
-                      </h2>
-                      <p className="text-gray-600 mt-2">
+                      </Box>
+                      <Box sx={{ color: '#666' }}>
                         Esta funcionalidade está em desenvolvimento
-                      </p>
-                    </div>
-                  </div>
+                      </Box>
+                    </Box>
+                  </Box>
                 }
               />
             </Routes>
-          </main>
-        </div>
+          </Box>
+        </Box>
         <Toast />
       </BrowserRouter>
     </QueryClientProvider>

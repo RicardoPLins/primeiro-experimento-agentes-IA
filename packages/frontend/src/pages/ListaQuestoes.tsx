@@ -3,8 +3,29 @@ import { useQuestoes, useDeletarQuestao } from '../hooks/useQuestoes';
 import { useUiStore } from '../store/uiStore';
 import { useNavigate } from 'react-router-dom';
 import { QuestaoCard } from '../components/QuestaoCard';
-import { Button, Input, Tabs } from '../components/ui';
-import { BookOpen, Grid3X3, List, Plus, Search } from 'lucide-react';
+import {
+  Box,
+  Button,
+  Container,
+  TextField,
+  Tabs,
+  Tab,
+  Typography,
+  CircularProgress,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  IconButton,
+} from '@mui/material';
+import {
+  LibraryBooks as BookOpenIcon,
+  ViewAgendaOutlined as ListIcon,
+  ViewComfyOutlined as GridIcon,
+  Add as PlusIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
 export const ListaQuestoes: FC = () => {
@@ -13,7 +34,7 @@ export const ListaQuestoes: FC = () => {
   const showToast = useUiStore((s) => s.showToast);
   const navigate = useNavigate();
   const [filtro, setFiltro] = useState('');
-  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [view, setView] = useState<number>(0);
 
   const handleDelete = async (id: string) => {
     if (confirm('Tem certeza que quer deletar?')) {
@@ -30,168 +51,242 @@ export const ListaQuestoes: FC = () => {
     q.enunciado.toLowerCase().includes(filtro.toLowerCase())
   );
 
-  const viewTabs = [
-    { label: 'Grid', value: 'grid', icon: <Grid3X3 className="w-4 h-4" /> },
-    { label: 'Lista', value: 'list', icon: <List className="w-4 h-4" /> },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 p-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900">Questões</h1>
-            </div>
-            <p className="text-gray-600">
-              Total: <strong>{filtradas.length}</strong> questão{filtradas.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <Button variant="primary" onClick={() => navigate('/questoes/nova')}>
-            <Plus className="w-4 h-4" />
-            Nova Questão
-          </Button>
-        </div>
-      </motion.div>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        py: 4,
+      }}
+    >
+      <Container maxWidth="lg">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 1,
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                  }}
+                >
+                  <BookOpenIcon sx={{ fontSize: 24 }} />
+                </Box>
+                <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                  Questões
+                </Typography>
+              </Box>
+              <Typography color="textSecondary">
+                Total: <strong>{filtradas.length}</strong> questão{filtradas.length !== 1 ? 's' : ''}
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              startIcon={<PlusIcon />}
+              onClick={() => navigate('/questoes/nova')}
+              sx={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                textTransform: 'none',
+                fontWeight: 'bold',
+                py: 1.5,
+                px: 3,
+              }}
+            >
+              Nova Questão
+            </Button>
+          </Box>
+        </motion.div>
 
-      {/* Filters & Controls */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-6"
-      >
-        <div className="flex gap-4 items-end">
-          <div className="flex-1">
-            <Input
+        {/* Filters & Controls */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Paper
+            sx={{
+              p: 2.5,
+              mb: 4,
+              display: 'flex',
+              gap: 2,
+              alignItems: 'flex-end',
+              boxShadow: 2,
+            }}
+          >
+            <TextField
               label="Buscar questões"
               placeholder="Digite o enunciado..."
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
-              icon={<Search className="w-4 h-4" />}
+              fullWidth
+              size="small"
+              variant="outlined"
+              sx={{ flex: 1 }}
             />
-          </div>
-          <Tabs
-            items={viewTabs}
-            activeTab={view}
-            onTabChange={(val) => setView(val as 'grid' | 'list')}
-            variant="pills"
-          />
-        </div>
-      </motion.div>
-
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-16">
-          <div className="text-center">
-            <div className="animate-spin mb-4">
-              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full" />
-            </div>
-            <p className="text-gray-600">Carregando questões...</p>
-          </div>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!isLoading && filtradas.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex items-center justify-center py-16"
-        >
-          <div className="text-center bg-white rounded-xl p-8 border border-gray-200 shadow-sm max-w-md">
-            <div className="text-5xl mb-4">📚</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {filtro ? 'Nenhuma questão encontrada' : 'Nenhuma questão criada'}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {filtro
-                ? 'Tente ajustar seus critérios de busca'
-                : 'Comece criando sua primeira questão'}
-            </p>
-            {!filtro && (
-              <Button
-                variant="primary"
-                onClick={() => navigate('/questoes/nova')}
-              >
-                <Plus className="w-4 h-4" />
-                Criar Questão
-              </Button>
-            )}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Grid View */}
-      {!isLoading && view === 'grid' && filtradas.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {filtradas.map((questao, idx) => (
-            <QuestaoCard
-              key={questao.id}
-              questao={questao}
-              index={idx}
-              onEdit={(id) => navigate(`/questoes/${id}/editar`)}
-              onDelete={handleDelete}
-            />
-          ))}
-        </motion.div>
-      )}
-
-      {/* List View */}
-      {!isLoading && view === 'list' && filtradas.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-3"
-        >
-          {filtradas.map((questao, idx) => (
-            <motion.div
-              key={questao.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
+            <Tabs
+              value={view}
+              onChange={(_, newValue) => setView(newValue)}
+              sx={{
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  minWidth: 'auto',
+                },
+              }}
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-sm text-gray-500">Questão {idx + 1}</p>
-                  <p className="text-base font-medium text-gray-900 line-clamp-2">
-                    {questao.enunciado}
-                  </p>
-                </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/questoes/${questao.id}/editar`)}
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDelete(questao.id)}
-                  >
-                    Deletar
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              <Tab icon={<GridIcon sx={{ mr: 1 }} />} label="Grid" />
+              <Tab icon={<ListIcon sx={{ mr: 1 }} />} label="Lista" />
+            </Tabs>
+          </Paper>
         </motion.div>
-      )}
-    </div>
+
+        {/* Loading State */}
+        {isLoading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+            <Box sx={{ textAlign: 'center' }}>
+              <CircularProgress sx={{ mb: 2 }} />
+              <Typography color="textSecondary">Carregando questões...</Typography>
+            </Box>
+          </Box>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && filtradas.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+              <Paper
+                sx={{
+                  textAlign: 'center',
+                  p: 4,
+                  maxWidth: 400,
+                  boxShadow: 2,
+                }}
+              >
+                <Typography variant="h2" sx={{ mb: 2 }}>
+                  📚
+                </Typography>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                  {filtro ? 'Nenhuma questão encontrada' : 'Nenhuma questão criada'}
+                </Typography>
+                <Typography color="textSecondary" sx={{ mb: 3 }}>
+                  {filtro
+                    ? 'Tente ajustar seus critérios de busca'
+                    : 'Comece criando sua primeira questão'}
+                </Typography>
+                {!filtro && (
+                  <Button
+                    variant="contained"
+                    startIcon={<PlusIcon />}
+                    onClick={() => navigate('/questoes/nova')}
+                    sx={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    }}
+                  >
+                    Criar Questão
+                  </Button>
+                )}
+              </Paper>
+            </Box>
+          </motion.div>
+        )}
+
+        {/* Grid View */}
+        {!isLoading && view === 0 && filtradas.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
+              {filtradas.map((questao, idx) => (
+                <Box key={questao.id}>
+                  <QuestaoCard
+                    questao={questao}
+                    index={idx}
+                    onEdit={(id) => navigate(`/questoes/${id}/editar`)}
+                    onDelete={handleDelete}
+                  />
+                </Box>
+              ))}
+            </Box>
+          </motion.div>
+        )}
+
+        {/* List View */}
+        {!isLoading && view === 1 && filtradas.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <List sx={{ bgcolor: '#fff', borderRadius: 1, boxShadow: 2 }}>
+              {filtradas.map((questao, idx) => (
+                <motion.div
+                  key={questao.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <ListItem
+                    secondaryAction={
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <IconButton
+                          edge="end"
+                          aria-label="edit"
+                          size="small"
+                          onClick={() => navigate(`/questoes/${questao.id}/editar`)}
+                          sx={{ color: '#667eea' }}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          edge="end"
+                          aria-label="delete"
+                          size="small"
+                          onClick={() => handleDelete(questao.id)}
+                          sx={{ color: '#f44336' }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    }
+                    divider={idx < filtradas.length - 1}
+                    sx={{
+                      '&:hover': {
+                        bgcolor: '#f5f5f5',
+                      },
+                    }}
+                  >
+                    <ListItemText
+                      primary={`Questão ${idx + 1}`}
+                      secondary={questao.enunciado}
+                      sx={{
+                        '& .MuiListItemText-secondary': {
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        },
+                      }}
+                    />
+                  </ListItem>
+                </motion.div>
+              ))}
+            </List>
+          </motion.div>
+        )}
+      </Container>
+    </Box>
   );
 };

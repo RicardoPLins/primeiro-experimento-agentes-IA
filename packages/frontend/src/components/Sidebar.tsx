@@ -1,119 +1,202 @@
 import { FC } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  BookOpen,
-  FileText,
-  Printer,
-  CheckSquare,
-  BarChart3,
-  Home,
-  Settings,
-  HelpCircle,
-} from 'lucide-react';
-import clsx from 'clsx';
+  Home as HomeIcon,
+  LibraryBooks as BookOpenIcon,
+  Description as FileTextIcon,
+  Print as PrinterIcon,
+  CheckBox as CheckSquareIcon,
+  BarChart as BarChartIcon,
+  Settings as SettingsIcon,
+  Help as HelpCircleIcon,
+} from '@mui/icons-material';
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Box,
+  Typography,
+  Divider,
+  Avatar,
+} from '@mui/material';
 import { motion } from 'framer-motion';
 
 export const Sidebar: FC = () => {
   const location = useLocation();
 
   const menuItems = [
-    { icon: Home, label: 'Dashboard', path: '/' },
-    { icon: BookOpen, label: 'Questões', path: '/questoes' },
-    { icon: FileText, label: 'Provas', path: '/provas' },
-    { icon: Printer, label: 'Gerar PDF', path: '/pdf/1' },
-    { icon: CheckSquare, label: 'Correção', path: '/correcao' },
-    { icon: BarChart3, label: 'Relatório', path: '/relatorio' },
+    { icon: HomeIcon, label: 'Dashboard', path: '/' },
+    { icon: BookOpenIcon, label: 'Questões', path: '/questoes' },
+    { icon: FileTextIcon, label: 'Provas', path: '/provas' },
+    { icon: PrinterIcon, label: 'Gerar PDF', path: '/pdf/1' },
+    { icon: CheckSquareIcon, label: 'Correção', path: '/correcao' },
+    { icon: BarChartIcon, label: 'Relatório', path: '/relatorio' },
   ];
 
   const secondaryItems = [
-    { icon: HelpCircle, label: 'Ajuda', path: '/help' },
-    { icon: Settings, label: 'Configurações', path: '/settings' },
+    { icon: HelpCircleIcon, label: 'Ajuda', path: '/help' },
+    { icon: SettingsIcon, label: 'Configurações', path: '/settings' },
   ];
 
-  return (
-    <aside className="w-64 bg-gradient-to-b from-gray-900 via-slate-900 to-gray-950 text-white h-screen p-6 flex flex-col border-r border-gray-800 shadow-2xl">
-      {/* Logo & Title */}
+  const drawerContent = (
+    <Box
+      sx={{
+        height: '100vh',
+        background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+        color: '#fff',
+        display: 'flex',
+        flexDirection: 'column',
+        py: 2,
+      }}
+    >
+      {/* Logo Section */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
       >
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-            <FileText className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">Provas</h1>
-            <p className="text-xs text-gray-400">Manager v1.0</p>
-          </div>
-        </div>
+        <Box sx={{ px: 3, mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            sx={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              width: 40,
+              height: 40,
+              fontWeight: 'bold',
+            }}
+          >
+            GP
+          </Avatar>
+          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            Gerenciador Provas
+          </Typography>
+        </Box>
       </motion.div>
 
-      {/* Main Navigation */}
-      <nav className="space-y-1 flex-1">
+      {/* Main Menu */}
+      <List sx={{ flex: 1 }}>
         {menuItems.map((item, idx) => {
-          const Icon = item.icon;
           const isActive = location.pathname === item.path;
+          const Icon = item.icon;
 
           return (
-            <motion.div key={item.path} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}>
-              <Link
+            <motion.div
+              key={item.path}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: idx * 0.05 }}
+            >
+              <ListItem
+                component={Link}
                 to={item.path}
-                className={clsx(
-                  'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group relative',
-                  isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
-                    : 'text-gray-300 hover:bg-gray-800'
-                )}
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  mb: 0.5,
+                  color: isActive ? '#667eea' : '#aaa',
+                  backgroundColor: isActive ? 'rgba(102, 126, 234, 0.1)' : 'transparent',
+                  borderLeft: isActive ? '3px solid #667eea' : '3px solid transparent',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                    color: '#667eea',
+                  },
+                }}
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="sidebar-active"
-                    className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg"
-                    transition={{ duration: 0.2 }}
-                  />
-                )}
-                <Icon className={clsx('w-5 h-5 transition-colors relative z-10', isActive ? 'text-white' : 'text-gray-400 group-hover:text-blue-400')} />
-                <span className={clsx('text-sm font-medium relative z-10', isActive && 'font-semibold')}>
-                  {item.label}
-                </span>
-              </Link>
+                <ListItemIcon
+                  sx={{
+                    minWidth: 40,
+                    color: isActive ? '#667eea' : '#aaa',
+                  }}
+                >
+                  <Icon />
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.label}
+                  primaryTypographyProps={{
+                    variant: 'body2',
+                    sx: { fontWeight: isActive ? '600' : '500' },
+                  }}
+                />
+              </ListItem>
             </motion.div>
           );
         })}
-      </nav>
+      </List>
 
-      {/* Divider */}
-      <div className="border-t border-gray-700 my-4" />
+      <Divider sx={{ backgroundColor: 'rgba(255,255,255, 0.1)', my: 2 }} />
 
-      {/* Secondary Navigation */}
-      <nav className="space-y-1 mb-6">
-        {secondaryItems.map((item) => {
+      {/* Secondary Menu */}
+      <List>
+        {secondaryItems.map((item, idx) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-
           return (
-            <Link
+            <motion.div
               key={item.path}
-              to={item.path}
-              className={clsx(
-                'flex items-center gap-3 px-4 py-2 rounded-lg transition-colors',
-                isActive ? 'bg-gray-800 text-blue-400' : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800'
-              )}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 + idx * 0.05 }}
             >
-              <Icon className="w-4 h-4" />
-              <span className="text-xs font-medium">{item.label}</span>
-            </Link>
+              <ListItem
+                component={Link}
+                to={item.path}
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  color: '#aaa',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                    color: '#667eea',
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40, color: '#aaa' }}>
+                  <Icon />
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.label}
+                  primaryTypographyProps={{ variant: 'body2' }}
+                />
+              </ListItem>
+            </motion.div>
           );
         })}
-      </nav>
+      </List>
 
       {/* Footer Info */}
-      <div className="bg-gradient-to-r from-blue-950 to-slate-900 rounded-lg p-3 border border-blue-900">
-        <p className="text-xs text-gray-400 leading-relaxed">
-          <strong className="text-blue-300">Dica:</strong> Use atalhos de teclado para navegar mais rápido entre seções.
-        </p>
-      </div>
-    </aside>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        <Box sx={{ px: 2, py: 2, borderTop: '1px solid rgba(255,255,255, 0.1)' }}>
+          <Typography variant="caption" sx={{ color: '#666' }}>
+            v1.0.0
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#666', display: 'block', mt: 1 }}>
+            💡 Dica: Use o formulário com validação em tempo real
+          </Typography>
+        </Box>
+      </motion.div>
+    </Box>
+  );
+
+  return (
+    <Drawer
+      variant="permanent"
+      anchor="left"
+      sx={{
+        width: 280,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: 280,
+          boxSizing: 'border-box',
+          backgroundColor: 'transparent',
+        },
+      }}
+    >
+      {drawerContent}
+    </Drawer>
   );
 };
