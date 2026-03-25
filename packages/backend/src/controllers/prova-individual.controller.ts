@@ -64,9 +64,19 @@ export class ProvaIndividualController {
     try {
       const { id, numeroProva } = req.params;
 
-      console.log(`[ProvaIndividualController.downloadPDF] Baixando PDF prova ${numeroProva}`);
+      console.log(`[ProvaIndividualController.downloadPDF] Baixando PDF prova ${numeroProva} da prova ${id}`);
 
-      const pdf = await relatorioProvaService.gerarPDFProvaIndividual(id);
+      // Buscar prova individual pelo número dentro de uma prova específica
+      const provasIndividuais = await provaIndividualService.listarPorProva(id);
+      const provaIndividual = provasIndividuais.find(
+        (p) => p.numero === parseInt(numeroProva)
+      );
+
+      if (!provaIndividual) {
+        throw new ApplicationError('NOT_FOUND', `Prova individual ${numeroProva} não encontrada`, 404);
+      }
+
+      const pdf = await relatorioProvaService.gerarPDFProvaIndividual(provaIndividual.id);
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="prova-${numeroProva}.pdf"`);
@@ -162,6 +172,41 @@ export class ProvaIndividualController {
         total: provas.length,
         primeiraGeracao: provas.length > 0 ? provas[0].createdAt : null,
         ultimaGeracao: provas.length > 0 ? provas[provas.length - 1].createdAt : null,
+      });
+    } catch (erro) {
+      this.tratarErro(erro, res);
+    }
+  }
+
+  /**
+   * GET /provas/:id/provas/:numeroProva/embaralhamento
+   * Obter informações de embaralhamento de uma prova individual
+   */
+  async getEmbaralhamento(req: Request, res: Response): Promise<void> {
+    try {
+      const { id, numeroProva } = req.params;
+
+      console.log(`[ProvaIndividualController.getEmbaralhamento] Obtendo embaralhamento da prova ${numeroProva}`);
+
+      const provas = await provaIndividualService.listarPorProva(id);
+      const provaIndividual = provas.find((p) => p.numero === parseInt(numeroProva));
+
+      if (!provaIndividual) {
+        throw new ApplicationError('NOT_FOUND', 'Prova individual não encontrada', 404);
+      }
+
+      res.status(200).json({
+        provaId: id,
+        numeroProva: provaIndividual.numero,
+        totalQuestoes: provaIndividual.questoesEmbaralhadas.length,
+        embaralhamento: {
+          questoes: provaIndividual.questoesEmbaralhadas.map((q, idx) => ({
+            posicaoNaProva: idx + 1,
+            questaoOriginal: q.questaoId,
+            alternativasEmbaralhadas: q.alternativasEmbaralhadas,
+          })),
+          sementes: provaIndividual.sementes,
+        },
       });
     } catch (erro) {
       this.tratarErro(erro, res);

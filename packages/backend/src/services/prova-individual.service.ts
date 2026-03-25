@@ -129,21 +129,63 @@ export class ProvaIndividualService {
   ): Promise<void> {
     const respostas: string[] = [];
 
+    console.log(`\n[gerarGabarito] ===== INICIANDO GERAÇÃO DO GABARITO =====`);
+    console.log(`[gerarGabarito] Prova ${numero}`);
+    console.log(`[gerarGabarito] Total de questões embaralhadas: ${provaIndividual.questoesEmbaralhadas.length}`);
+    console.log(`[gerarGabarito] Prova tem ${prova.questoes.length} questões originais\n`);
+
     for (const questaoEmbaralhada of provaIndividual.questoesEmbaralhadas) {
-      // Buscar questão original
+      console.log(`\n[gerarGabarito] Processando questão: ${questaoEmbaralhada.questaoId}`);
+      
+      // Buscar questão original pelo ID
       const questao = prova.questoes.find((q) => q.id === questaoEmbaralhada.questaoId);
-      if (!questao) continue;
+      if (!questao) {
+        console.warn(`[gerarGabarito] ❌ Questão ${questaoEmbaralhada.questaoId} NÃO ENCONTRADA`);
+        console.warn(`[gerarGabarito] IDs disponíveis: ${prova.questoes.map(q => q.id).join(', ')}`);
+        continue;
+      }
 
-      // Encontrar resposta correta na ordem original
-      const indiceCorreto = questao.alternativas.findIndex((alt) => alt.isCorreta);
-      if (indiceCorreto === -1) continue;
+      console.log(`[gerarGabarito]   Enunciado: ${questao.enunciado}`);
+      console.log(`[gerarGabarito]   Alternativas: ${questao.alternativas.length}`);
 
-      // Encontrar novo índice após embaralhamento
-      const novoIndice = questaoEmbaralhada.alternativasEmbaralhadas.indexOf(`${indiceCorreto}`);
-      const letra = String.fromCharCode(65 + novoIndice);
+      // Encontrar qual alternativa é a correta na ordem ORIGINAL
+      let indiceCorretoOriginal = -1;
+      for (let i = 0; i < questao.alternativas.length; i++) {
+        if (questao.alternativas[i].isCorreta) {
+          indiceCorretoOriginal = i;
+          break;
+        }
+      }
 
+      if (indiceCorretoOriginal === -1) {
+        console.warn(`[gerarGabarito]   ❌ Nenhuma alternativa correta encontrada`);
+        continue;
+      }
+
+      console.log(`[gerarGabarito]   Índice correto original: ${indiceCorretoOriginal}`);
+      console.log(`[gerarGabarito]   alternativasEmbaralhadas: [${questaoEmbaralhada.alternativasEmbaralhadas.join(', ')}]`);
+
+      // Encontrar a posição do índice correto original no array embaralhado
+      // alternativasEmbaralhadas contém os índices originais na nova ordem
+      const posicaoNovoIndice = questaoEmbaralhada.alternativasEmbaralhadas.indexOf(
+        `${indiceCorretoOriginal}`
+      );
+
+      if (posicaoNovoIndice === -1) {
+        console.warn(`[gerarGabarito]   ❌ Índice correto ${indiceCorretoOriginal} NÃO ENCONTRADO`);
+        continue;
+      }
+
+      // Converter para letra (0 -> A, 1 -> B, etc)
+      const letra = String.fromCharCode(65 + posicaoNovoIndice);
       respostas.push(letra);
+
+      console.log(
+        `[gerarGabarito]   ✅ Resposta: ${letra} (posição ${posicaoNovoIndice})`
+      );
     }
+
+    console.log(`\n[gerarGabarito] FINAL: Prova ${numero} - Respostas: [${respostas.join(', ')}]`);
 
     const gabarito = {
       id: uuidv4(),

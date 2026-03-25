@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  LinearProgress,
 } from '@mui/material';
 import {
   CloudDownload as DownloadIcon,
@@ -37,7 +38,9 @@ export const GerarProvasIndividuaisPage: FC = () => {
   const [provasGeradas, setProvasGeradas] = useState(0);
   const [showDialogDownload, setShowDialogDownload] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
   const [stats, setStats] = useState<any>(null);
+  const [generationProgress, setGenerationProgress] = useState(0);
 
   const handleGerarProvas = async () => {
     if (!id) return;
@@ -49,6 +52,9 @@ export const GerarProvasIndividuaisPage: FC = () => {
 
     try {
       setIsGenerating(true);
+      setGenerationProgress(0);
+      showToast(`⏳ Gerando ${quantidade} provas individuais...`, 'info');
+      
       const response = await fetch(`/api/provas/${id}/gerar-individuais`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,13 +65,20 @@ export const GerarProvasIndividuaisPage: FC = () => {
 
       const data = await response.json();
       setProvasGeradas(data.quantidade);
-      showToast(`✅ ${data.quantidade} provas individuais geradas!`, 'success');
+      setGenerationProgress(100);
+      
+      showToast(`✅ ${data.quantidade} provas individuais geradas com sucesso!`, 'success');
       
       // Carregar estatísticas
       await loadStats();
-      setShowDialogDownload(true);
+      
+      // Delay para mostrar 100%
+      setTimeout(() => {
+        setShowDialogDownload(true);
+      }, 500);
     } catch (error: any) {
       showToast(error.message || 'Erro ao gerar provas', 'error');
+      setGenerationProgress(0);
     } finally {
       setIsGenerating(false);
     }
@@ -89,11 +102,14 @@ export const GerarProvasIndividuaisPage: FC = () => {
 
     try {
       setIsDownloading(true);
+      setDownloadProgress(10);
       showToast('📦 Preparando download do ZIP...', 'info');
       
+      setDownloadProgress(30);
       const response = await fetch(`/api/provas/${id}/pdfs.zip`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
+      setDownloadProgress(70);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -102,10 +118,16 @@ export const GerarProvasIndividuaisPage: FC = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       
+      setDownloadProgress(100);
       showToast('✅ ZIP baixado com sucesso!', 'success');
-      setShowDialogDownload(false);
+      
+      setTimeout(() => {
+        setShowDialogDownload(false);
+        setDownloadProgress(0);
+      }, 500);
     } catch (error: any) {
       showToast('❌ Erro ao baixar ZIP', 'error');
+      setDownloadProgress(0);
     } finally {
       setIsDownloading(false);
     }
@@ -116,11 +138,17 @@ export const GerarProvasIndividuaisPage: FC = () => {
 
     try {
       setIsDownloading(true);
-      showToast('📥 Iniciando download dos PDFs...', 'info');
+      const totalToDownload = Math.min(provasGeradas, 5);
+      showToast(`📥 Baixando ${totalToDownload} PDFs...`, 'info');
       
-      for (let i = 1; i <= Math.min(provasGeradas, 5); i++) {
+      for (let i = 1; i <= totalToDownload; i++) {
+        setDownloadProgress(Math.round((i / totalToDownload) * 100));
+        
         const response = await fetch(`/api/provas/${id}/pdf/${i}`);
-        if (!response.ok) continue;
+        if (!response.ok) {
+          console.warn(`Erro ao baixar PDF ${i}`);
+          continue;
+        }
 
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -134,14 +162,21 @@ export const GerarProvasIndividuaisPage: FC = () => {
         await new Promise(resolve => setTimeout(resolve, 300));
       }
       
+      setDownloadProgress(100);
+      
       if (provasGeradas > 5) {
-        showToast(`⚠️ Baixados 5 PDFs (máximo por vez). Use ZIP para todos!`, 'info');
+        showToast(`✅ ${totalToDownload} PDFs baixados! Use ZIP para todos os ${provasGeradas}`, 'success');
       } else {
         showToast('✅ PDFs baixados com sucesso!', 'success');
       }
-      setShowDialogDownload(false);
+      
+      setTimeout(() => {
+        setShowDialogDownload(false);
+        setDownloadProgress(0);
+      }, 500);
     } catch (error: any) {
       showToast('❌ Erro ao baixar PDFs', 'error');
+      setDownloadProgress(0);
     } finally {
       setIsDownloading(false);
     }
@@ -151,9 +186,15 @@ export const GerarProvasIndividuaisPage: FC = () => {
     if (!id) return;
 
     try {
+      setIsDownloading(true);
+      setDownloadProgress(10);
+      showToast('📥 Baixando gabarito...', 'info');
+      
+      setDownloadProgress(50);
       const response = await fetch(`/api/provas/${id}/gabarito.csv`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
+      setDownloadProgress(80);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -161,10 +202,19 @@ export const GerarProvasIndividuaisPage: FC = () => {
       a.download = `gabarito-${id}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
+      
+      setDownloadProgress(100);
       showToast('✅ Gabarito baixado!', 'success');
-      setShowDialogDownload(false);
+      
+      setTimeout(() => {
+        setShowDialogDownload(false);
+        setDownloadProgress(0);
+      }, 500);
     } catch (error: any) {
-      showToast('Erro ao baixar gabarito', 'error');
+      showToast('❌ Erro ao baixar gabarito', 'error');
+      setDownloadProgress(0);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -224,6 +274,7 @@ export const GerarProvasIndividuaisPage: FC = () => {
                   onChange={(e) => setQuantidade(parseInt(e.target.value))}
                   inputProps={{ min: 1, max: 1000 }}
                   sx={{ width: 150 }}
+                  disabled={isGenerating}
                 />
                 <Button
                   variant="contained"
@@ -240,6 +291,27 @@ export const GerarProvasIndividuaisPage: FC = () => {
                   {isGenerating ? 'Gerando...' : 'Gerar Provas'}
                 </Button>
               </Box>
+
+              {isGenerating && (
+                <Box sx={{ mb: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                      Gerando {quantidade} provas...
+                    </Typography>
+                  </Box>
+                  <Box sx={{ width: '100%', height: 8, bgcolor: '#e0e0e0', borderRadius: 4, overflow: 'hidden' }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${generationProgress}%` }}
+                      transition={{ duration: 0.5 }}
+                      style={{
+                        height: '100%',
+                        background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                      }}
+                    />
+                  </Box>
+                </Box>
+              )}
 
               {provasGeradas > 0 && (
                 <Alert severity="success" sx={{ mb: 2 }}>
@@ -270,6 +342,18 @@ export const GerarProvasIndividuaisPage: FC = () => {
                 </Typography>
               </CardContent>
             </Card>
+          )}
+
+          {downloadProgress > 0 && isDownloading && (
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                  Processando...
+                </Typography>
+                <Typography variant="caption">{downloadProgress}%</Typography>
+              </Box>
+              <LinearProgress variant="determinate" value={downloadProgress} sx={{ height: 6, borderRadius: 3 }} />
+            </Box>
           )}
           
           <Typography sx={{ mb: 2, fontSize: '0.9rem', color: '#666' }}>

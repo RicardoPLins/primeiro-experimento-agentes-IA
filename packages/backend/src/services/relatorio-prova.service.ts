@@ -84,6 +84,7 @@ export class RelatorioProvaService {
 
   /**
    * Adicionar conteúdo das questões ao PDF
+   * Mostra as questões e alternativas na ordem embaralhada
    */
   private adicionarConteudo(
     doc: any,
@@ -109,6 +110,10 @@ export class RelatorioProvaService {
       });
 
       doc.moveDown(0.5);
+
+      // Espaço para resposta do aluno
+      doc.strokeColor('#ccc').lineWidth(0.5).moveTo(100, doc.y).lineTo(500, doc.y).stroke();
+      doc.moveDown(0.3);
 
       // Verificar se precisa nova página
       if (doc.y > 700) {

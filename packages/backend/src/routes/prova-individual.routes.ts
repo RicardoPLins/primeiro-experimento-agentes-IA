@@ -49,4 +49,10 @@ router.get(
   asyncHandler((req, res) => provaIndividualController.getEstatisticas(req, res))
 );
 
+// GET /api/provas/:id/provas/:numeroProva/embaralhamento - Obter info de embaralhamento
+router.get(
+  '/:id/provas/:numeroProva/embaralhamento',
+  asyncHandler((req, res) => provaIndividualController.getEmbaralhamento(req, res))
+);
+
 export default router;
