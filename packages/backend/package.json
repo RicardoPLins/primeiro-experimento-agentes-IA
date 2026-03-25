@@ -8,8 +8,7 @@
     "start": "node dist/server.js",
     "test": "jest",
     "test:bdd": "cucumber-js",
-    "lint": "eslint src/**/*.ts",
-    "clear-provas": "tsx src/scripts/clear-provas.ts"
+    "lint": "eslint src/**/*.ts"
   },
   "dependencies": {
     "@gerenciador-provas/shared": "*",

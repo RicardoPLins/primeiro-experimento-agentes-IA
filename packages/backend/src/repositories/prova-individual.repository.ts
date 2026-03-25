@@ -85,6 +85,14 @@ export class ProvaIndividualRepository {
   async contarPorProva(provaId: string): Promise<number> {
     return ProvaIndividualModel.countDocuments({ provaId });
   }
+
+  /**
+   * Excluir todas as provas individuais de uma prova
+   */
+  async excluirPorProva(provaId: string): Promise<number> {
+    const resultado = await ProvaIndividualModel.deleteMany({ provaId });
+    return resultado.deletedCount;
+  }
 }
 
 export default new ProvaIndividualRepository();

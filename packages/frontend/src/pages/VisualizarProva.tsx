@@ -161,14 +161,14 @@ export const VisualizarProva: FC = () => {
               <Button
                 variant="contained"
                 startIcon={<PrintIcon />}
-                onClick={() => navigate(`/pdf/${prova.id}`)}
+                onClick={() => navigate(`/provas/${prova.id}/gerar-individuais`)}
                 sx={{
                   background: 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)',
                   textTransform: 'none',
                   fontWeight: 'bold',
                 }}
               >
-                Gerar PDF
+                Gerar Provas Individuais
               </Button>
               <Button
                 variant="contained"

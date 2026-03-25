@@ -10,6 +10,7 @@ import { ListaProvas } from './pages/ListaProvas';
 import { CriarEditarProva } from './pages/CriarEditarProva';
 import { VisualizarProva } from './pages/VisualizarProva';
 import { ProvaIndividualPage } from './pages/ProvaIndividualPage';
+import { GerarProvasIndividuaisPage } from './pages/GerarProvasIndividuaisPage';
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ function App() {
               <Route path="/provas/nova" element={<CriarEditarProva />} />
               <Route path="/provas/:id" element={<VisualizarProva />} />
               <Route path="/provas/:id/editar" element={<CriarEditarProva />} />
+              <Route path="/provas/:id/gerar-individuais" element={<GerarProvasIndividuaisPage />} />
               <Route path="/prova-individual/:id" element={<ProvaIndividualPage />} />
               
               {/* Seções em desenvolvimento */}

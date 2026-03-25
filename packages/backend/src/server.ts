@@ -6,6 +6,7 @@ import 'dotenv/config';
 import mongoConnection from './database/mongo';
 import questaoRoutes from './routes/questao.routes';
 import provaRoutes from './routes/prova.routes';
+import provaIndividualRoutes from './routes/prova-individual.routes';
 import { ApplicationError } from './errors/ApplicationError';
 
 const app: Application = express();
@@ -43,6 +44,7 @@ app.get('/health', async (_req: Request, res: Response) => {
 // Rotas da API
 app.use('/api/questoes', questaoRoutes);
 app.use('/api/provas', provaRoutes);
+app.use('/api/provas', provaIndividualRoutes);
 
 // Middleware de tratamento de erros global
 app.use((err: unknown, _req: Request, res: Response) => {
