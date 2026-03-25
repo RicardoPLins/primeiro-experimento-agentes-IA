@@ -71,6 +71,7 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
   const showToast = useUiStore((s) => s.showToast);
   const alternativas = watch('alternativas');
   const enunciado = watch('enunciado');
+  const tipoIdentificacao = watch('tipoIdentificacao');
   const corretasCount = alternativas?.filter((a) => a.isCorreta).length || 0;
   const alternativasPreenchidas = alternativas?.filter((a) => a.descricao.length > 0).length || 0;
 
@@ -227,7 +228,12 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
             >
               <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {alternativas?.map((alt, idx) => {
-                  const letra = String.fromCharCode(65 + idx);
+                  // Usar letras ou potências de 2 baseado no tipo de identificação
+                  const potenciasde2 = [1, 2, 4, 8, 16];
+                  const identificador = tipoIdentificacao === 'POTENCIAS_DE_2' 
+                    ? String(potenciasde2[idx]) 
+                    : String.fromCharCode(65 + idx);
+                  
                   const temErro = !!errors.alternativas?.[idx]?.descricao;
 
                   return (
@@ -252,7 +258,7 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
                         }}
                       >
                         <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                          {/* Label Badge (Letter) */}
+                          {/* Label Badge (Letter or Power of 2) */}
                           <Box
                             sx={{
                               width: 36,
@@ -267,7 +273,7 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
                               flexShrink: 0,
                             }}
                           >
-                            {letra}
+                            {identificador}
                           </Box>
 
                           {/* Alternativa Input */}
@@ -280,7 +286,7 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
                                   {...field}
                                   fullWidth
                                   size="small"
-                                  placeholder={`Alternativa ${letra}`}
+                                  placeholder={`Alternativa ${identificador}`}
                                   error={temErro}
                                   helperText={errors.alternativas?.[idx]?.descricao?.message}
                                   inputProps={{ maxLength: 200 }}
