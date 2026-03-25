@@ -17,9 +17,10 @@ export class ProvaController {
       console.log('[ProvaController.criar] Body:', JSON.stringify(req.body));
       
       const { nome, disciplina, professor, data, turma, identificacao, questoesIds } = req.body;
-      console.log('[ProvaController.criar] Convertendo data...');
-      const dataConvertida = new Date(data);
-      console.log('[ProvaController.criar] Data convertida:', dataConvertida);
+      
+      // Converter data no formato YYYY-MM-DD para Date sem timezone issues
+      const [ano, mes, dia] = data.split('-');
+      const dataConvertida = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
       
       console.log('[ProvaController.criar] Chamando provaService.criar...');
       const prova = await provaService.criar(
@@ -83,7 +84,11 @@ export class ProvaController {
       if (nome !== undefined) atualizacoes.nome = nome;
       if (disciplina !== undefined) atualizacoes.disciplina = disciplina;
       if (professor !== undefined) atualizacoes.professor = professor;
-      if (data !== undefined) atualizacoes.data = new Date(data);
+      if (data !== undefined) {
+        // Converter data no formato YYYY-MM-DD para Date
+        const [ano, mes, dia] = data.split('-');
+        atualizacoes.data = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+      }
       if (turma !== undefined) atualizacoes.turma = turma;
       if (identificacao !== undefined) atualizacoes.identificacao = identificacao;
       if (questoesIds !== undefined) atualizacoes.questoesIds = questoesIds;

@@ -10,10 +10,6 @@ import {
   Box,
   Button,
   TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  FormLabel,
   Typography,
   Card,
   Checkbox,
@@ -100,7 +96,7 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
         disciplina: data.disciplina,
         professor: data.professor,
         turma: data.turma,
-        data: new Date(data.data).toISOString(),
+        data: data.data,
         identificacao: data.identificacao as Identificacao,
         questoesIds: data.questoes,
       };
@@ -179,20 +175,6 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
             fullWidth
             InputLabelProps={{ shrink: true }}
           />
-
-          <FormControl fullWidth error={!!errors.identificacao}>
-            <FormLabel sx={{ mb: 1 }}>Tipo de Identificação</FormLabel>
-            <Controller
-              name="identificacao"
-              control={control}
-              render={({ field }) => (
-                <Select {...field} size="small">
-                  <MenuItem value="LETRAS">Letras (A, B, C, D, E)</MenuItem>
-                  <MenuItem value="POTENCIAS_DE_2">Potências de 2 (1, 2, 4, 8, 16)</MenuItem>
-                </Select>
-              )}
-            />
-          </FormControl>
         </Box>
 
         {/* Questões Selection */}
