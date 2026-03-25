@@ -17,7 +17,8 @@ export class QuestaoService {
    */
   async criar(
     enunciado: string,
-    alternativas: Alternativa[]
+    alternativas: Alternativa[],
+    tipoIdentificacao?: 'LETRAS' | 'POTENCIAS_DE_2'
   ): Promise<Questao> {
     if (!enunciado || enunciado.trim().length === 0) {
       throw new ValidationError('Enunciado não pode estar vazio', { enunciado });
@@ -43,6 +44,7 @@ export class QuestaoService {
     return questaoRepository.criar({
       enunciado,
       alternativas: alternativasComIds,
+      tipoIdentificacao: tipoIdentificacao || 'LETRAS',
     });
   }
 
@@ -70,7 +72,8 @@ export class QuestaoService {
   async atualizar(
     id: string,
     enunciado?: string,
-    alternativas?: Alternativa[]
+    alternativas?: Alternativa[],
+    tipoIdentificacao?: 'LETRAS' | 'POTENCIAS_DE_2'
   ): Promise<Questao> {
     await this.buscarPorId(id);
 
@@ -86,6 +89,7 @@ export class QuestaoService {
 
     const atualizacoes: Partial<Questao> = {};
     if (enunciado !== undefined) atualizacoes.enunciado = enunciado;
+    if (tipoIdentificacao !== undefined) atualizacoes.tipoIdentificacao = tipoIdentificacao;
     if (alternativas !== undefined) {
       const temAlternativaCorreta = alternativas.some((alt) => alt.isCorreta);
       if (!temAlternativaCorreta) {

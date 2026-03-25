@@ -13,8 +13,8 @@ export class QuestaoController {
    */
   async criar(req: Request, res: Response): Promise<void> {
     try {
-      const { enunciado, alternativas } = req.body;
-      const questao = await questaoService.criar(enunciado, alternativas);
+      const { enunciado, alternativas, tipoIdentificacao } = req.body;
+      const questao = await questaoService.criar(enunciado, alternativas, tipoIdentificacao);
       res.status(201).json(questao);
     } catch (erro) {
       this.tratarErro(erro, res);
@@ -55,8 +55,8 @@ export class QuestaoController {
   async atualizar(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { enunciado, alternativas } = req.body;
-      const questao = await questaoService.atualizar(id, enunciado, alternativas);
+      const { enunciado, alternativas, tipoIdentificacao } = req.body;
+      const questao = await questaoService.atualizar(id, enunciado, alternativas, tipoIdentificacao);
       res.status(200).json(questao);
     } catch (erro) {
       this.tratarErro(erro, res);

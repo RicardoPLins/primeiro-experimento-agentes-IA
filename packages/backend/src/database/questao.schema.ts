@@ -19,6 +19,7 @@ const QuestaoSchema = new Schema<Questao>(
     id: { type: String, required: true, unique: true, index: true },
     enunciado: { type: String, required: true },
     alternativas: [AlternativaSchema],
+    tipoIdentificacao: { type: String, enum: ['LETRAS', 'POTENCIAS_DE_2'], default: 'LETRAS' },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },

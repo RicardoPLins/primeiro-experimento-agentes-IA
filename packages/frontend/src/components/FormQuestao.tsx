@@ -18,6 +18,10 @@ import {
   CircularProgress,
   Chip,
   Paper,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { Check, Info as InfoIcon } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -26,10 +30,11 @@ const questaoSchema = z.object({
   enunciado: z.string().min(10, 'Mínimo 10 caracteres').max(500, 'Máximo 500 caracteres'),
   alternativas: z.array(
     z.object({
-      descricao: z.string().min(2, 'Descrição obrigatória').max(200, 'Máximo 200 caracteres'),
+      descricao: z.string().min(1, 'Descrição obrigatória').max(200, 'Máximo 200 caracteres'),
       isCorreta: z.boolean(),
     })
   ).min(5, 'Mínimo 5 alternativas').max(5, 'Máximo 5 alternativas'),
+  tipoIdentificacao: z.enum(['LETRAS', 'POTENCIAS_DE_2']),
 });
 
 type FormQuestaoData = z.infer<typeof questaoSchema>;
@@ -46,6 +51,7 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
     defaultValues: {
       enunciado: questao?.enunciado || '',
       alternativas: questao?.alternativas || Array(5).fill(null).map(() => ({ descricao: '', isCorreta: false })),
+      tipoIdentificacao: (questao?.tipoIdentificacao as 'LETRAS' | 'POTENCIAS_DE_2') || 'LETRAS',
     },
   });
 
@@ -55,6 +61,7 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
       reset({
         enunciado: questao.enunciado,
         alternativas: questao.alternativas,
+        tipoIdentificacao: (questao.tipoIdentificacao as 'LETRAS' | 'POTENCIAS_DE_2') || 'LETRAS',
       });
     }
   }, [questao, reset]);
@@ -166,6 +173,30 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
               />
             </motion.div>
 
+            {/* Tipo de Identificação */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 }}
+            >
+              <Controller
+                name="tipoIdentificacao"
+                control={control}
+                render={({ field }) => (
+                  <FormControl fullWidth sx={{ mb: 3 }}>
+                    <InputLabel>Tipo de Identificação</InputLabel>
+                    <Select
+                      {...field}
+                      label="Tipo de Identificação"
+                    >
+                      <MenuItem value="LETRAS">Letras (A, B, C, D, E)</MenuItem>
+                      <MenuItem value="POTENCIAS_DE_2">Potências de 2 (1, 2, 4, 8, 16)</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
+              />
+            </motion.div>
+
             {/* Alternativas Header */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
@@ -195,7 +226,10 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
             >
               <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {alternativas?.map((alt, idx) => {
+                  const tipoId = watch('tipoIdentificacao');
                   const letra = String.fromCharCode(65 + idx);
+                  const potencia = Math.pow(2, idx);
+                  const label = tipoId === 'POTENCIAS_DE_2' ? potencia : letra;
                   const temErro = !!errors.alternativas?.[idx]?.descricao;
 
                   return (
@@ -220,7 +254,7 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
                         }}
                       >
                         <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                          {/* Letter Badge */}
+                          {/* Label Badge (Letter or Power of 2) */}
                           <Box
                             sx={{
                               width: 36,
@@ -233,9 +267,10 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
                               justifyContent: 'center',
                               fontWeight: 'bold',
                               flexShrink: 0,
+                              fontSize: tipoId === 'POTENCIAS_DE_2' ? '0.85rem' : 'inherit',
                             }}
                           >
-                            {letra}
+                            {label}
                           </Box>
 
                           {/* Alternativa Input */}
@@ -248,7 +283,9 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
                                   {...field}
                                   fullWidth
                                   size="small"
-                                  placeholder={`Alternativa ${letra}`}
+                                  placeholder={tipoId === 'POTENCIAS_DE_2' 
+                                    ? `Alternativa com valor ${label}` 
+                                    : `Alternativa ${letra}`}
                                   error={temErro}
                                   helperText={errors.alternativas?.[idx]?.descricao?.message}
                                   inputProps={{ maxLength: 200 }}

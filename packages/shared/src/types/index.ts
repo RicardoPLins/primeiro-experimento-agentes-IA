@@ -13,6 +13,7 @@ export interface Questao {
   id: string;
   enunciado: string;
   alternativas: Alternativa[];
+  tipoIdentificacao?: Identificacao;
   createdAt: Date;
   updatedAt: Date;
 }
