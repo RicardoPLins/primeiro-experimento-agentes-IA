@@ -103,7 +103,7 @@ export class ProvaController {
     try {
       const { id } = req.params;
       await provaService.excluir(id);
-      res.status(204).send();
+      res.status(200).json({ message: 'Prova excluída com sucesso', id });
     } catch (erro) {
       this.tratarErro(erro, res);
     }
