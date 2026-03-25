@@ -128,6 +128,7 @@ export class ProvaIndividualService {
     numero: number
   ): Promise<void> {
     const respostas: string[] = [];
+    const potenciasde2 = [1, 2, 4, 8, 16];
 
     console.log(`\n[gerarGabarito] ===== INICIANDO GERAÇÃO DO GABARITO =====`);
     console.log(`[gerarGabarito] Prova ${numero}`);
@@ -147,6 +148,7 @@ export class ProvaIndividualService {
 
       console.log(`[gerarGabarito]   Enunciado: ${questao.enunciado}`);
       console.log(`[gerarGabarito]   Alternativas: ${questao.alternativas.length}`);
+      console.log(`[gerarGabarito]   Tipo de Identificação: ${questao.tipoIdentificacao}`);
 
       // Encontrar qual alternativa é a correta na ordem ORIGINAL
       let indiceCorretoOriginal = -1;
@@ -176,12 +178,15 @@ export class ProvaIndividualService {
         continue;
       }
 
-      // Converter para letra (0 -> A, 1 -> B, etc)
-      const letra = String.fromCharCode(65 + posicaoNovoIndice);
-      respostas.push(letra);
+      // Converter para letra ou número baseado no tipo de identificação
+      const resposta = questao.tipoIdentificacao === 'POTENCIAS_DE_2' 
+        ? String(potenciasde2[posicaoNovoIndice])
+        : String.fromCharCode(65 + posicaoNovoIndice);
+      
+      respostas.push(resposta);
 
       console.log(
-        `[gerarGabarito]   ✅ Resposta: ${letra} (posição ${posicaoNovoIndice})`
+        `[gerarGabarito]   ✅ Resposta: ${resposta} (posição ${posicaoNovoIndice})`
       );
     }
 

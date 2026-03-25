@@ -91,6 +91,8 @@ export class RelatorioProvaService {
     prova: Prova,
     provaIndividual: ProvaIndividual
   ): void {
+    const potenciasde2 = [1, 2, 4, 8, 16];
+
     provaIndividual.questoesEmbaralhadas.forEach((questaoEmbaralhada, idx) => {
       // Buscar questão original
       const questao = prova.questoes.find((q) => q.id === questaoEmbaralhada.questaoId);
@@ -104,9 +106,13 @@ export class RelatorioProvaService {
       questaoEmbaralhada.alternativasEmbaralhadas.forEach((indiceOriginal, altIdx) => {
         const idx_num = parseInt(indiceOriginal);
         const alt = questao.alternativas[idx_num];
-        const letra = String.fromCharCode(65 + altIdx);
+        
+        // Usar letras ou potências de 2 baseado no tipo de identificação
+        const identificador = questao.tipoIdentificacao === 'POTENCIAS_DE_2' 
+          ? String(potenciasde2[altIdx]) 
+          : String.fromCharCode(65 + altIdx);
 
-        doc.fontSize(11).font('Helvetica').text(`${letra}) ${alt.descricao}`);
+        doc.fontSize(11).font('Helvetica').text(`${identificador}) ${alt.descricao}`);
       });
 
       doc.moveDown(0.5);

@@ -103,27 +103,35 @@ export const QuestaoCard: FC<QuestaoCardProps> = ({
               </Typography>
 
               <Box sx={{ mb: 2 }}>
-                {questao.alternativas.map((alt, idx) => (
-                  <Box
-                    key={alt.id}
-                    sx={{
-                      p: 1,
-                      mb: 1,
-                      borderRadius: 1,
-                      backgroundColor: alt.isCorreta ? '#e8f5e9' : '#f5f5f5',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 1,
-                      fontSize: '0.875rem',
-                    }}
-                  >
-                    <Typography sx={{ fontWeight: 'bold' }}>
-                      {String.fromCharCode(65 + idx)}){' '}
-                    </Typography>
-                    <Typography sx={{ flex: 1 }}>{alt.descricao}</Typography>
-                    {alt.isCorreta && <CheckCircleIcon sx={{ color: '#2e7d32', fontSize: 18 }} />}
-                  </Box>
-                ))}
+                {questao.alternativas.map((alt, idx) => {
+                  // Usar letras ou potências de 2 baseado no tipo de identificação
+                  const potenciasde2 = [1, 2, 4, 8, 16];
+                  const identificador = questao.tipoIdentificacao === 'POTENCIAS_DE_2' 
+                    ? String(potenciasde2[idx]) 
+                    : String.fromCharCode(65 + idx);
+
+                  return (
+                    <Box
+                      key={alt.id}
+                      sx={{
+                        p: 1,
+                        mb: 1,
+                        borderRadius: 1,
+                        backgroundColor: alt.isCorreta ? '#e8f5e9' : '#f5f5f5',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 1,
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      <Typography sx={{ fontWeight: 'bold' }}>
+                        {identificador}){' '}
+                      </Typography>
+                      <Typography sx={{ flex: 1 }}>{alt.descricao}</Typography>
+                      {alt.isCorreta && <CheckCircleIcon sx={{ color: '#2e7d32', fontSize: 18 }} />}
+                    </Box>
+                  );
+                })}
               </Box>
 
               <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
