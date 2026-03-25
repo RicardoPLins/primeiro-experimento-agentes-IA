@@ -37,4 +37,16 @@ router.get(
   asyncHandler((req, res) => provaIndividualController.downloadGabarito(req, res))
 );
 
+// GET /api/provas/:id/pdfs.zip - Download ZIP com todos os PDFs
+router.get(
+  '/:id/pdfs.zip',
+  asyncHandler((req, res) => provaIndividualController.downloadZip(req, res))
+);
+
+// GET /api/provas/:id/estatisticas - Obter estatísticas
+router.get(
+  '/:id/estatisticas',
+  asyncHandler((req, res) => provaIndividualController.getEstatisticas(req, res))
+);
+
 export default router;

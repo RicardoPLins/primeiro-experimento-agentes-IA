@@ -20,6 +20,7 @@ import {
   CloudDownload as DownloadIcon,
   PlayArrow as GenerateIcon,
   FileDownload as FileIcon,
+  Archive as ArchiveIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useProva } from '../hooks/useProvas';
@@ -35,6 +36,8 @@ export const GerarProvasIndividuaisPage: FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [provasGeradas, setProvasGeradas] = useState(0);
   const [showDialogDownload, setShowDialogDownload] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [stats, setStats] = useState<any>(null);
 
   const handleGerarProvas = async () => {
     if (!id) return;
@@ -57,6 +60,9 @@ export const GerarProvasIndividuaisPage: FC = () => {
       const data = await response.json();
       setProvasGeradas(data.quantidade);
       showToast(`✅ ${data.quantidade} provas individuais geradas!`, 'success');
+      
+      // Carregar estatísticas
+      await loadStats();
       setShowDialogDownload(true);
     } catch (error: any) {
       showToast(error.message || 'Erro ao gerar provas', 'error');
@@ -65,14 +71,54 @@ export const GerarProvasIndividuaisPage: FC = () => {
     }
   };
 
+  const loadStats = async () => {
+    if (!id) return;
+    try {
+      const response = await fetch(`/api/provas/${id}/estatisticas`);
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+    }
+  };
+
+  const handleDownloadZip = async () => {
+    if (!id || provasGeradas === 0) return;
+
+    try {
+      setIsDownloading(true);
+      showToast('📦 Preparando download do ZIP...', 'info');
+      
+      const response = await fetch(`/api/provas/${id}/pdfs.zip`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `provas-${id}.zip`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      showToast('✅ ZIP baixado com sucesso!', 'success');
+      setShowDialogDownload(false);
+    } catch (error: any) {
+      showToast('❌ Erro ao baixar ZIP', 'error');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const handleDownloadPDFs = async () => {
     if (!id || provasGeradas === 0) return;
 
     try {
-      showToast('Baixando PDFs...', 'info');
-      // Implementar download de múltiplos PDFs
-      // Por enquanto, fazer download de um por um
-      for (let i = 1; i <= provasGeradas; i++) {
+      setIsDownloading(true);
+      showToast('📥 Iniciando download dos PDFs...', 'info');
+      
+      for (let i = 1; i <= Math.min(provasGeradas, 5); i++) {
         const response = await fetch(`/api/provas/${id}/pdf/${i}`);
         if (!response.ok) continue;
 
@@ -83,10 +129,21 @@ export const GerarProvasIndividuaisPage: FC = () => {
         a.download = `prova-${i}.pdf`;
         a.click();
         window.URL.revokeObjectURL(url);
+        
+        // Pequeno delay entre downloads
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
-      showToast('✅ PDFs baixados!', 'success');
+      
+      if (provasGeradas > 5) {
+        showToast(`⚠️ Baixados 5 PDFs (máximo por vez). Use ZIP para todos!`, 'info');
+      } else {
+        showToast('✅ PDFs baixados com sucesso!', 'success');
+      }
+      setShowDialogDownload(false);
     } catch (error: any) {
-      showToast('Erro ao baixar PDFs', 'error');
+      showToast('❌ Erro ao baixar PDFs', 'error');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -196,29 +253,69 @@ export const GerarProvasIndividuaisPage: FC = () => {
 
       {/* Dialog de Download */}
       <Dialog open={showDialogDownload} onClose={() => setShowDialogDownload(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Baixar Provas</DialogTitle>
+        <DialogTitle>📥 Opções de Download</DialogTitle>
         <DialogContent>
           <Typography sx={{ mb: 3 }}>
-            {provasGeradas} provas individuais geradas. O que deseja fazer?
+            ✅ {provasGeradas} provas individuais geradas com sucesso!
+          </Typography>
+          
+          {stats && (
+            <Card sx={{ mb: 3, bgcolor: '#f5f5f5' }}>
+              <CardContent>
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                  📊 Estatísticas
+                </Typography>
+                <Typography variant="caption">
+                  Total gerado: <strong>{stats.total}</strong> provas
+                </Typography>
+              </CardContent>
+            </Card>
+          )}
+          
+          <Typography sx={{ mb: 2, fontSize: '0.9rem', color: '#666' }}>
+            Escolha uma opção abaixo:
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowDialogDownload(false)}>Cancelar</Button>
-          <Button
-            onClick={handleDownloadCSV}
+        <DialogActions sx={{ flexDirection: 'column', gap: 1, p: 2 }}>
+          <Button 
+            fullWidth
+            onClick={handleDownloadZip}
+            disabled={isDownloading}
             variant="contained"
-            startIcon={<FileIcon />}
-            sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+            startIcon={isDownloading ? <CircularProgress size={20} /> : <ArchiveIcon />}
+            sx={{ background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)' }}
           >
-            Baixar Gabarito CSV
+            📦 Baixar em ZIP (Recomendado)
           </Button>
-          <Button
+          
+          <Button 
+            fullWidth
             onClick={handleDownloadPDFs}
-            variant="contained"
-            startIcon={<DownloadIcon />}
-            sx={{ background: 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)' }}
+            disabled={isDownloading || provasGeradas === 0}
+            variant="outlined"
+            startIcon={isDownloading ? <CircularProgress size={20} /> : <DownloadIcon />}
+            sx={{ mt: 1 }}
           >
-            Baixar PDFs
+            📄 Baixar PDFs Individuais
+          </Button>
+          
+          <Button 
+            fullWidth
+            onClick={handleDownloadCSV}
+            disabled={isDownloading}
+            variant="outlined"
+            startIcon={<FileIcon />}
+            sx={{ mt: 1 }}
+          >
+            📋 Baixar Gabarito (CSV)
+          </Button>
+          
+          <Button 
+            fullWidth
+            onClick={() => setShowDialogDownload(false)}
+            sx={{ mt: 2 }}
+          >
+            Fechar
           </Button>
         </DialogActions>
       </Dialog>

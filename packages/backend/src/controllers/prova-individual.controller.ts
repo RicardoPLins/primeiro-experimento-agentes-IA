@@ -3,6 +3,8 @@ import provaIndividualService from '../services/prova-individual.service';
 import relatorioProvaService from '../services/relatorio-prova.service';
 import { ApplicationError } from '../errors/ApplicationError';
 
+const archiver = require('archiver');
+
 /**
  * Controller de Prova Individual
  */
@@ -89,6 +91,78 @@ export class ProvaIndividualController {
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="gabarito-${id}.csv"`);
       res.send(csv);
+    } catch (erro) {
+      this.tratarErro(erro, res);
+    }
+  }
+
+  /**
+   * GET /provas/:id/pdfs.zip
+   * Download ZIP com todos os PDFs de provas individuais
+   */
+  async downloadZip(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      console.log(`[ProvaIndividualController.downloadZip] Gerando ZIP para ${id}`);
+
+      // Buscar todas as provas individuais
+      const provas = await provaIndividualService.listarPorProva(id);
+
+      if (provas.length === 0) {
+        throw new ApplicationError('NOT_FOUND', 'Nenhuma prova individual encontrada', 404);
+      }
+
+      // Configurar resposta como ZIP
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="provas-${id}.zip"`);
+
+      // Criar arquivo ZIP
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      archive.pipe(res);
+
+      // Adicionar cada PDF ao ZIP
+      for (const prova of provas) {
+        try {
+          const pdf = await relatorioProvaService.gerarPDFProvaIndividual(id);
+          archive.append(pdf, { name: `prova-${prova.numero}.pdf` });
+        } catch (e) {
+          console.warn(`[ProvaIndividualController.downloadZip] Erro ao gerar PDF ${prova.numero}:`, e);
+        }
+      }
+
+      // Adicionar CSV com gabarito
+      try {
+        const csv = await relatorioProvaService.gerarCSVGabarito(id);
+        archive.append(csv, { name: 'gabarito.csv' });
+      } catch (e) {
+        console.warn('[ProvaIndividualController.downloadZip] Erro ao gerar CSV:', e);
+      }
+
+      await archive.finalize();
+    } catch (erro) {
+      this.tratarErro(erro, res);
+    }
+  }
+
+  /**
+   * GET /provas/:id/estatisticas
+   * Obter estatísticas de provas geradas
+   */
+  async getEstatisticas(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      console.log(`[ProvaIndividualController.getEstatisticas] Obtendo stats para ${id}`);
+
+      const provas = await provaIndividualService.listarPorProva(id);
+
+      res.status(200).json({
+        provaId: id,
+        total: provas.length,
+        primeiraGeracao: provas.length > 0 ? provas[0].createdAt : null,
+        ultimaGeracao: provas.length > 0 ? provas[provas.length - 1].createdAt : null,
+      });
     } catch (erro) {
       this.tratarErro(erro, res);
     }
