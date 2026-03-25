@@ -206,7 +206,10 @@ export const ListaProvas: FC = () => {
                       variant="outlined"
                       startIcon={<EditIcon />}
                       onClick={() => navigate(`/provas/${prova.id}/editar`)}
-                      sx={{ textTransform: 'none' }}
+                      sx={{
+                        flex: 1,
+                        textTransform: 'none',
+                      }}
                     >
                       Editar
                     </Button>
@@ -216,7 +219,10 @@ export const ListaProvas: FC = () => {
                       color="error"
                       startIcon={<DeleteIcon />}
                       onClick={() => handleDelete(prova.id)}
-                      sx={{ textTransform: 'none' }}
+                      sx={{
+                        flex: 1,
+                        textTransform: 'none',
+                      }}
                     >
                       Deletar
                     </Button>

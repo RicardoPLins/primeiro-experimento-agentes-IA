@@ -74,26 +74,26 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
 
   const onSubmit = async (data: FormProvaData) => {
     try {
-      const payload: any = {
+      const payload = {
         nome: data.nome,
         disciplina: data.disciplina,
         professor: data.professor,
         turma: data.turma,
         data: new Date(data.data),
         identificacao: data.identificacao as Identificacao,
-        questoes: questoesSelecionadas,
-        updatedAt: new Date(),
+        questoesIds: data.questoes,
       };
 
       if (prova) {
-        await atualizarMutation?.mutateAsync(payload);
+        await atualizarMutation?.mutateAsync(payload as any);
         showToast('Prova atualizada!', 'success');
       } else {
-        await criarMutation.mutateAsync(payload);
+        await criarMutation.mutateAsync(payload as any);
         showToast('Prova criada!', 'success');
       }
       onSuccess?.();
-    } catch {
+    } catch (error) {
+      console.error('Erro ao salvar prova:', error);
       showToast('Erro ao salvar prova', 'error');
     }
   };

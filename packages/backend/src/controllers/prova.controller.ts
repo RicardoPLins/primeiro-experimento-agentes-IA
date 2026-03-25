@@ -63,7 +63,18 @@ export class ProvaController {
   async atualizar(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const prova = await provaService.atualizar(id, req.body);
+      const { nome, disciplina, professor, data, turma, identificacao, questoesIds } = req.body;
+
+      const atualizacoes: any = {};
+      if (nome !== undefined) atualizacoes.nome = nome;
+      if (disciplina !== undefined) atualizacoes.disciplina = disciplina;
+      if (professor !== undefined) atualizacoes.professor = professor;
+      if (data !== undefined) atualizacoes.data = new Date(data);
+      if (turma !== undefined) atualizacoes.turma = turma;
+      if (identificacao !== undefined) atualizacoes.identificacao = identificacao;
+      if (questoesIds !== undefined) atualizacoes.questoesIds = questoesIds;
+
+      const prova = await provaService.atualizar(id, atualizacoes);
       res.status(200).json(prova);
     } catch (erro) {
       this.tratarErro(erro, res);

@@ -15,20 +15,24 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useProvas } from '../hooks/useProvas';
+import { useQuestoes } from '../hooks/useQuestoes';
 
 export const Dashboard: FC = () => {
   const navigate = useNavigate();
+  const { data: provas = [] } = useProvas();
+  const { data: questoes = [] } = useQuestoes();
 
   const stats = [
     {
       label: 'Total de Questões',
-      value: 0,
+      value: questoes.length,
       icon: BookOpenIcon,
       color: '#667eea',
     },
     {
       label: 'Provas Criadas',
-      value: 0,
+      value: provas.length,
       icon: FileTextIcon,
       color: '#2e7d32',
     },

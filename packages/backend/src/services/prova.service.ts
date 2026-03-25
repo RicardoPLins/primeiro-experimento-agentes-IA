@@ -73,9 +73,21 @@ export class ProvaService {
    */
   async atualizar(
     id: string,
-    atualizacoes: Partial<Prova>
+    atualizacoes: Partial<Prova> & { questoesIds?: string[] }
   ): Promise<Prova> {
     await this.buscarPorId(id);
+
+    // Se questoesIds foi fornecido, validar e converter
+    if (atualizacoes.questoesIds) {
+      if (atualizacoes.questoesIds.length !== 5) {
+        throw new ValidationError('Prova deve ter exatamente 5 questões', {
+          fornecidas: atualizacoes.questoesIds.length,
+        });
+      }
+      const questoes = await questaoService.buscarPorIds(atualizacoes.questoesIds);
+      atualizacoes.questoes = questoes;
+      delete (atualizacoes as any).questoesIds;
+    }
 
     if (atualizacoes.questoes && atualizacoes.questoes.length !== 5) {
       throw new ValidationError('Prova deve ter exatamente 5 questões', {
