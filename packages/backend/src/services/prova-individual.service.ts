@@ -187,15 +187,21 @@ export class ProvaIndividualService {
 
     console.log(`\n[gerarGabarito] FINAL: Prova ${numero} - Respostas: [${respostas.join(', ')}]`);
 
+    if (respostas.length === 0) {
+      console.warn(`[gerarGabarito] ⚠️  Gabarito VAZIO para prova ${numero}`);
+    }
+
     const gabarito = {
       id: uuidv4(),
       provaIndividualId: provaIndividual.id,
       numero,
-      respostas,
-      modo: prova.identificacao,
+      respostas: respostas,
+      modo: prova.identificacao || 'LETRAS',
     };
 
-    await gabaritoRepository.criar(gabarito);
+    console.log(`[gerarGabarito] 💾 Salvando gabarito: Prova ${numero}, Respostas: [${gabarito.respostas.join(',')}]`);
+    const result = await gabaritoRepository.criar(gabarito);
+    console.log(`[gerarGabarito] ✅ Gabarito salvo com sucesso. ID: ${result.id}`);
   }
 
   /**

@@ -157,8 +157,11 @@ export class RelatorioProvaService {
       const provasIndividuais = await provaIndividualRepository.listarPorProva(provaId);
 
       if (provasIndividuais.length === 0) {
+        console.warn('[RelatorioProvaService.gerarCSVGabarito] ❌ Nenhuma prova individual encontrada');
         throw new Error('Nenhuma prova individual encontrada');
       }
+
+      console.log(`[RelatorioProvaService.gerarCSVGabarito] ✅ Encontradas ${provasIndividuais.length} provas individuais`);
 
       // Cabeçalho
       const questoesCount = provasIndividuais[0].questoesEmbaralhadas.length;
@@ -170,15 +173,47 @@ export class RelatorioProvaService {
       const linhas: string[] = [colunas.join(',')];
 
       // Dados de cada prova
+      let gabaritoCount = 0;
       for (const provaIndividual of provasIndividuais) {
         const gabarito = await gabaritoRepository.buscarPorProvaIndividual(provaIndividual.id);
-        if (!gabarito) continue;
+        
+        if (!gabarito) {
+          console.warn(`[RelatorioProvaService.gerarCSVGabarito] ⚠️  Gabarito NÃO encontrado para prova individual ${provaIndividual.numero}`);
+          // Criar linha vazia se gabarito não existir
+          const linhaVazia = [provaIndividual.numero.toString()];
+          for (let i = 0; i < questoesCount; i++) {
+            linhaVazia.push('');
+          }
+          linhas.push(linhaVazia.join(','));
+          continue;
+        }
 
-        const linha = [provaIndividual.numero.toString(), ...gabarito.respostas];
+        gabaritoCount++;
+        
+        const respostasStr = gabarito.respostas && gabarito.respostas.length > 0 ? gabarito.respostas.join('') : '(vazio)';
+        console.log(`[RelatorioProvaService.gerarCSVGabarito]   Prova ${provaIndividual.numero}: ${respostasStr}`);
+
+        const linha = [provaIndividual.numero.toString()];
+        
+        // Adicionar respostas (podem estar vazias)
+        if (gabarito.respostas && gabarito.respostas.length > 0) {
+          linha.push(...gabarito.respostas);
+        } else {
+          // Se vazio, adicionar células vazias
+          for (let i = 0; i < questoesCount; i++) {
+            linha.push('');
+          }
+        }
+        
         linhas.push(linha.join(','));
       }
 
-      return linhas.join('\n');
+      console.log(`[RelatorioProvaService.gerarCSVGabarito] ✅ CSV final: ${gabaritoCount} gabaritos processados, ${linhas.length} linhas totais`);
+
+      const csvFinal = linhas.join('\n');
+      console.log(`[RelatorioProvaService.gerarCSVGabarito] CSV gerado (${csvFinal.length} bytes):\n${csvFinal}`);
+
+      return csvFinal;
     } catch (error) {
       console.error('❌ Erro ao gerar CSV:', error);
       throw error;
