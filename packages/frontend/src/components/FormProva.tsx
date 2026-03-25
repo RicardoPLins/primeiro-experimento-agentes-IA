@@ -119,7 +119,24 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
   const onSubmit = async (data: FormProvaData) => {
     try {
       if (data.questoes.length !== 5) {
-        showToast('Selecione exatamente 5 questões', 'error');
+        showToast('❌ Selecione exatamente 5 questões', 'error');
+        return;
+      }
+
+      // Validar que todas as questões têm o mesmo tipo de identificação
+      const questoesSelecionadas = questoes.filter((q) => data.questoes.includes(q.id));
+      const tipos = questoesSelecionadas.map((q) => q.tipoIdentificacao || 'LETRAS');
+      const tipoUnico = tipos[0];
+      
+      if (!tipos.every((tipo) => tipo === tipoUnico)) {
+        showToast(
+          `❌ Todas as questões devem ser do mesmo tipo de identificação. ${
+            tipoUnico === 'LETRAS' 
+              ? 'Você selecionou questões com tipo LETRAS. Remova as questões de POTÊNCIAS_DE_2.' 
+              : 'Você selecionou questões com tipo POTÊNCIAS_DE_2. Remova as questões de LETRAS.'
+          }`,
+          'error'
+        );
         return;
       }
 
@@ -135,16 +152,16 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
 
       if (prova && prova.id) {
         await atualizarMutation?.mutateAsync(payload as any);
-        showToast('Prova atualizada com sucesso!', 'success');
+        showToast('✅ Prova atualizada com sucesso!', 'success');
       } else {
         await criarMutation.mutateAsync(payload as any);
-        showToast('Prova criada com sucesso!', 'success');
+        showToast('✅ Prova criada com sucesso!', 'success');
       }
       onSuccess?.();
     } catch (error: any) {
       console.error('Erro ao salvar prova:', error);
-      const mensagemErro = error?.message || 'Erro ao salvar prova';
-      showToast(mensagemErro, 'error');
+      const mensagemErro = error?.response?.data?.message || error?.message || 'Erro ao salvar prova';
+      showToast(`❌ ${mensagemErro}`, 'error');
     }
   };
 
@@ -219,12 +236,12 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
               <Box sx={{ 
                 px: 2, 
                 py: 1, 
-                backgroundColor: '#e3f2fd', 
+                backgroundColor: tipoDetectado === 'LETRAS' ? '#e8f5e9' : '#fff3e0', 
                 borderRadius: 1, 
-                border: '1px solid #1976d2' 
+                border: tipoDetectado === 'LETRAS' ? '2px solid #2e7d32' : '2px solid #f57c00' 
               }}>
-                <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                  📌 Tipo: {tipoDetectado === 'LETRAS' ? 'Letras (A, B, C, D, E)' : 'Potências de 2 (1, 2, 4, 8, 16)'}
+                <Typography variant="caption" sx={{ fontWeight: 'bold', color: tipoDetectado === 'LETRAS' ? '#2e7d32' : '#f57c00' }}>
+                  {tipoDetectado === 'LETRAS' ? '📝 Múltipla Escolha (A, B, C, D, E)' : '🔢 Potências de 2 (1, 2, 4, 8, 16)'}
                 </Typography>
               </Box>
             )}
@@ -232,11 +249,19 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
 
           {errors.questoes && <Alert severity="error" sx={{ mb: 2 }}>{errors.questoes.message}</Alert>}
 
+          {!tipoDetectado && questoes.length > 0 && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              💡 Selecione a primeira questão para determinar o tipo de identificação (Letras ou Potências de 2). As demais questões devem ser do mesmo tipo.
+            </Alert>
+          )}
+
           {questoesDisponiveis.length === 0 ? (
-            <Alert severity="info">
+            <Alert severity="warning">
               {questoes.length === 0 
-                ? 'Nenhuma questão disponível. Crie questões primeiro!' 
-                : `Nenhuma questão disponível com tipo ${tipoDetectado === 'LETRAS' ? 'Letras' : 'Potências de 2'}. Selecione questões de um tipo para filtrar.`}
+                ? '❌ Nenhuma questão disponível. Crie questões primeiro!' 
+                : tipoDetectado 
+                  ? `❌ Nenhuma questão disponível com tipo ${tipoDetectado === 'LETRAS' ? '📝 Múltipla Escolha' : '🔢 Potências de 2'}. Você precisa criar mais questões deste tipo.`
+                  : '❌ Selecione a primeira questão para filtrar por tipo.'}
             </Alert>
           ) : (
             <Box sx={{ display: 'grid', gap: 2, maxHeight: 400, overflowY: 'auto' }}>
@@ -272,9 +297,27 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
                       )}
                     />
                     <Box sx={{ flex: 1 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        {questao.enunciado}
-                      </Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', flex: 1 }}>
+                          {questao.enunciado}
+                        </Typography>
+                        <Box sx={{
+                          px: 1,
+                          py: 0.5,
+                          backgroundColor: questao.tipoIdentificacao === 'POTENCIAS_DE_2' ? '#fff3e0' : '#e8f5e9',
+                          borderRadius: 0.5,
+                          ml: 1,
+                          flexShrink: 0
+                        }}>
+                          <Typography variant="caption" sx={{ 
+                            fontWeight: 'bold',
+                            color: questao.tipoIdentificacao === 'POTENCIAS_DE_2' ? '#f57c00' : '#2e7d32',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {questao.tipoIdentificacao === 'POTENCIAS_DE_2' ? '🔢 Potências' : '📝 Letras'}
+                          </Typography>
+                        </Box>
+                      </Box>
                       <Typography variant="body2" color="textSecondary">
                         {questao.alternativas.length} alternativas
                       </Typography>
