@@ -13,7 +13,6 @@ interface DropdownProps {
   items: DropdownItem[];
   onSelect: (value: string) => void;
   trigger?: ReactNode;
-  label?: string;
   defaultValue?: string;
 }
 
@@ -21,7 +20,6 @@ export const Dropdown: FC<DropdownProps> = ({
   items,
   onSelect,
   trigger,
-  label,
   defaultValue,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
