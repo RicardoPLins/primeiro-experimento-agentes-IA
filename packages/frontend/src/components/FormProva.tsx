@@ -79,10 +79,42 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
   }, [prova, reset]);
 
   const questoesIds = watch('questoes');
+  const identificacaoSelecionada = watch('identificacao');
   const questoesSelecionadas = useMemo(
     () => questoes.filter((q) => questoesIds.includes(q.id)),
     [questoes, questoesIds]
   );
+
+  // Detectar tipo de identificação baseado nas questões já selecionadas
+  const tipoDetectado: 'LETRAS' | 'POTENCIAS_DE_2' | null = useMemo(() => {
+    if (questoesSelecionadas.length === 0) return null;
+    const tipo = questoesSelecionadas[0]?.tipoIdentificacao || 'LETRAS';
+    return tipo as any;
+  }, [questoesSelecionadas]);
+
+  // Filtrar questões apenas do tipo detectado
+  const questoesDisponiveis = useMemo(() => {
+    if (tipoDetectado === null) {
+      // Se nenhuma questão foi selecionada ainda, mostrar todas
+      return questoes;
+    }
+    // Mostrar apenas questões do tipo detectado
+    return questoes.filter((q) => {
+      const tipo = q.tipoIdentificacao || 'LETRAS';
+      return tipo === tipoDetectado;
+    });
+  }, [questoes, tipoDetectado]);
+
+  // Atualizar identificacao automáticamente quando tipo for detectado
+  useEffect(() => {
+    if (tipoDetectado && tipoDetectado !== identificacaoSelecionada) {
+      // Reset é importado do form, atualizar identificacao
+      reset((prevValues) => ({
+        ...prevValues,
+        identificacao: tipoDetectado,
+      }));
+    }
+  }, [tipoDetectado, identificacaoSelecionada, reset]);
 
   const onSubmit = async (data: FormProvaData) => {
     try {
@@ -179,17 +211,36 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
 
         {/* Questões Selection */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
-            Selecionar 5 Questões ({questoesIds.length}/5)
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+              Selecionar 5 Questões ({questoesIds.length}/5)
+            </Typography>
+            {tipoDetectado && (
+              <Box sx={{ 
+                px: 2, 
+                py: 1, 
+                backgroundColor: '#e3f2fd', 
+                borderRadius: 1, 
+                border: '1px solid #1976d2' 
+              }}>
+                <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                  📌 Tipo: {tipoDetectado === 'LETRAS' ? 'Letras (A, B, C, D, E)' : 'Potências de 2 (1, 2, 4, 8, 16)'}
+                </Typography>
+              </Box>
+            )}
+          </Box>
 
           {errors.questoes && <Alert severity="error" sx={{ mb: 2 }}>{errors.questoes.message}</Alert>}
 
-          {questoes.length === 0 ? (
-            <Alert severity="info">Nenhuma questão disponível. Crie questões primeiro!</Alert>
+          {questoesDisponiveis.length === 0 ? (
+            <Alert severity="info">
+              {questoes.length === 0 
+                ? 'Nenhuma questão disponível. Crie questões primeiro!' 
+                : `Nenhuma questão disponível com tipo ${tipoDetectado === 'LETRAS' ? 'Letras' : 'Potências de 2'}. Selecione questões de um tipo para filtrar.`}
+            </Alert>
           ) : (
             <Box sx={{ display: 'grid', gap: 2, maxHeight: 400, overflowY: 'auto' }}>
-              {questoes.map((questao) => (
+              {questoesDisponiveis.map((questao) => (
                 <Card
                   key={questao.id}
                   sx={{

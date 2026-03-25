@@ -18,12 +18,17 @@ import {
   CircularProgress,
   Chip,
   Paper,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { Check, Info as InfoIcon } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
 const questaoSchema = z.object({
   enunciado: z.string().min(10, 'Mínimo 10 caracteres').max(500, 'Máximo 500 caracteres'),
+  tipoIdentificacao: z.enum(['LETRAS', 'POTENCIAS_DE_2']),
   alternativas: z.array(
     z.object({
       descricao: z.string().min(1, 'Descrição obrigatória').max(200, 'Máximo 200 caracteres'),
@@ -45,6 +50,7 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
     mode: 'onChange',
     defaultValues: {
       enunciado: questao?.enunciado || '',
+      tipoIdentificacao: questao?.tipoIdentificacao || 'LETRAS',
       alternativas: questao?.alternativas || Array(5).fill(null).map(() => ({ descricao: '', isCorreta: false })),
     },
   });
@@ -54,6 +60,7 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
     if (questao) {
       reset({
         enunciado: questao.enunciado,
+        tipoIdentificacao: questao.tipoIdentificacao || 'LETRAS',
         alternativas: questao.alternativas,
       });
     }
@@ -162,6 +169,31 @@ export const FormQuestao: FC<FormQuestaoProps> = ({ questao, onSuccess }) => {
                     inputProps={{ maxLength: 500 }}
                     sx={{ mb: 3 }}
                   />
+                )}
+              />
+            </motion.div>
+
+            {/* Tipo de Identificação */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <Controller
+                name="tipoIdentificacao"
+                control={control}
+                render={({ field }) => (
+                  <FormControl fullWidth sx={{ mb: 3 }}>
+                    <InputLabel>Tipo de Identificação</InputLabel>
+                    <Select
+                      {...field}
+                      label="Tipo de Identificação"
+                      error={!!errors.tipoIdentificacao}
+                    >
+                      <MenuItem value="LETRAS">Letras (A, B, C, D, E)</MenuItem>
+                      <MenuItem value="POTENCIAS_DE_2">Potências de 2 (1, 2, 4, 8, 16)</MenuItem>
+                    </Select>
+                  </FormControl>
                 )}
               />
             </motion.div>

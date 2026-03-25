@@ -102,6 +102,20 @@ export class ProvaService {
         });
       }
 
+      // Validar que todas as questões têm o mesmo tipo de identificação
+      const tiposIdentificacao = questoes.map((q) => q.tipoIdentificacao || 'LETRAS');
+      const tipoUnico = tiposIdentificacao[0];
+      
+      if (!tiposIdentificacao.every((tipo) => tipo === tipoUnico)) {
+        throw new ValidationError(
+          'Todas as questões devem ter o mesmo tipo de identificação (LETRAS ou POTENCIAS_DE_2)',
+          {
+            tipos: tiposIdentificacao,
+            esperado: tipoUnico,
+          }
+        );
+      }
+
       // Salvar prova
       console.log('[ProvaService.criar] Salvando prova no repositório...');
       const prova = await provaRepository.criar({
@@ -213,6 +227,21 @@ export class ProvaService {
       if (atualizacoes.questoesIds) {
         this.validateQuestoesIds(atualizacoes.questoesIds);
         const questoes = await questaoService.buscarPorIds(atualizacoes.questoesIds);
+        
+        // Validar que todas as questões têm o mesmo tipo de identificação
+        const tiposIdentificacao = questoes.map((q) => q.tipoIdentificacao || 'LETRAS');
+        const tipoUnico = tiposIdentificacao[0];
+        
+        if (!tiposIdentificacao.every((tipo) => tipo === tipoUnico)) {
+          throw new ValidationError(
+            'Todas as questões devem ter o mesmo tipo de identificação (LETRAS ou POTENCIAS_DE_2)',
+            {
+              tipos: tiposIdentificacao,
+              esperado: tipoUnico,
+            }
+          );
+        }
+        
         atualizacoes.questoes = questoes;
         delete (atualizacoes as any).questoesIds;
       }
