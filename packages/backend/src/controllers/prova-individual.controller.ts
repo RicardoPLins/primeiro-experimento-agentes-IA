@@ -116,8 +116,16 @@ export class ProvaIndividualController {
 
       console.log(`[ProvaIndividualController.downloadZip] Gerando ZIP para ${id}`);
 
+      // Buscar prova original para informações
+      const provaOriginal = await provaIndividualService.listarPorProva(id);
+      const primeiraProva = provaOriginal[0];
+      
+      if (!primeiraProva) {
+        throw new ApplicationError('NOT_FOUND', 'Nenhuma prova individual encontrada', 404);
+      }
+
       // Buscar todas as provas individuais
-      const provas = await provaIndividualService.listarPorProva(id);
+      const provas = provaOriginal;
 
       if (provas.length === 0) {
         throw new ApplicationError('NOT_FOUND', 'Nenhuma prova individual encontrada', 404);
@@ -125,16 +133,37 @@ export class ProvaIndividualController {
 
       // Configurar resposta como ZIP
       res.setHeader('Content-Type', 'application/zip');
-      res.setHeader('Content-Disposition', `attachment; filename="provas-${id}.zip"`);
+      res.setHeader('Content-Disposition', `attachment; filename="provas-${id}-${Date.now()}.zip"`);
 
       // Criar arquivo ZIP
       const archive = archiver('zip', { zlib: { level: 9 } });
       archive.pipe(res);
 
+      // Adicionar README com informações
+      const readme = `# Provas Individuais Geradas
+
+Prova ID: ${id}
+Total de Provas: ${provas.length}
+
+## Conteúdo do ZIP
+- prova-1.pdf até prova-${provas.length}.pdf: PDFs das ${provas.length} provas individuais
+- gabarito.csv: Gabarito com respostas corretas de cada prova
+- README.txt: Este arquivo
+
+## Como usar
+1. Extraia todos os arquivos
+2. Distribua os PDFs para os alunos
+3. Use o gabarito.csv para correção
+
+Data de Geração: ${new Date().toLocaleString('pt-BR')}
+`;
+
+      archive.append(readme, { name: 'README.txt' });
+
       // Adicionar cada PDF ao ZIP
       for (const prova of provas) {
         try {
-          const pdf = await relatorioProvaService.gerarPDFProvaIndividual(id);
+          const pdf = await relatorioProvaService.gerarPDFProvaIndividual(prova.id);
           archive.append(pdf, { name: `prova-${prova.numero}.pdf` });
         } catch (e) {
           console.warn(`[ProvaIndividualController.downloadZip] Erro ao gerar PDF ${prova.numero}:`, e);

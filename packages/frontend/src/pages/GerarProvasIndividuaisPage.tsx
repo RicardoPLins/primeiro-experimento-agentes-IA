@@ -314,9 +314,39 @@ export const GerarProvasIndividuaisPage: FC = () => {
               )}
 
               {provasGeradas > 0 && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  ✅ {provasGeradas} provas individuais geradas com sucesso!
-                </Alert>
+                <Box>
+                  <Alert severity="success" sx={{ mb: 2 }}>
+                    ✅ {provasGeradas} provas individuais geradas com sucesso!
+                  </Alert>
+                  
+                  {stats && (
+                    <Card sx={{ mb: 3, bgcolor: '#f9f9f9' }}>
+                      <CardContent>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2 }}>
+                          📊 Estatísticas de Geração
+                        </Typography>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                          <Box>
+                            <Typography variant="caption" color="textSecondary">
+                              Total de Provas
+                            </Typography>
+                            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                              {stats.total}
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="caption" color="textSecondary">
+                              Última Geração
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                              {stats.ultimaGeracao ? new Date(stats.ultimaGeracao).toLocaleString('pt-BR') : 'Nunca'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  )}
+                </Box>
               )}
             </CardContent>
           </Card>
@@ -327,25 +357,12 @@ export const GerarProvasIndividuaisPage: FC = () => {
       <Dialog open={showDialogDownload} onClose={() => setShowDialogDownload(false)} maxWidth="sm" fullWidth>
         <DialogTitle>📥 Opções de Download</DialogTitle>
         <DialogContent>
-          <Typography sx={{ mb: 3 }}>
+          <Typography sx={{ mb: 3, fontWeight: 'bold' }}>
             ✅ {provasGeradas} provas individuais geradas com sucesso!
           </Typography>
           
-          {stats && (
-            <Card sx={{ mb: 3, bgcolor: '#f5f5f5' }}>
-              <CardContent>
-                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  📊 Estatísticas
-                </Typography>
-                <Typography variant="caption">
-                  Total gerado: <strong>{stats.total}</strong> provas
-                </Typography>
-              </CardContent>
-            </Card>
-          )}
-
           {downloadProgress > 0 && isDownloading && (
-            <Box sx={{ mb: 2 }}>
+            <Box sx={{ mb: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                 <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
                   Processando...
@@ -356,7 +373,11 @@ export const GerarProvasIndividuaisPage: FC = () => {
             </Box>
           )}
           
-          <Typography sx={{ mb: 2, fontSize: '0.9rem', color: '#666' }}>
+          <Alert severity="info" sx={{ mb: 3 }}>
+            💡 <strong>ZIP recomendado:</strong> Contém todos os {provasGeradas} PDFs + gabarito em um arquivo
+          </Alert>
+
+          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2 }}>
             Escolha uma opção abaixo:
           </Typography>
         </DialogContent>
@@ -367,10 +388,16 @@ export const GerarProvasIndividuaisPage: FC = () => {
             disabled={isDownloading}
             variant="contained"
             startIcon={isDownloading ? <CircularProgress size={20} /> : <ArchiveIcon />}
-            sx={{ background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)' }}
+            sx={{ background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)' }}
           >
             📦 Baixar em ZIP (Recomendado)
           </Button>
+          
+          <Box sx={{ width: '100%', px: 1, py: 1 }}>
+            <Typography variant="caption" color="textSecondary">
+              ZIP contém: {provasGeradas} PDFs + gabarito.csv + README.txt
+            </Typography>
+          </Box>
           
           <Button 
             fullWidth
@@ -380,7 +407,7 @@ export const GerarProvasIndividuaisPage: FC = () => {
             startIcon={isDownloading ? <CircularProgress size={20} /> : <DownloadIcon />}
             sx={{ mt: 1 }}
           >
-            📄 Baixar PDFs Individuais
+            📄 Baixar {Math.min(provasGeradas, 5)} PDFs Individuais
           </Button>
           
           <Button 
