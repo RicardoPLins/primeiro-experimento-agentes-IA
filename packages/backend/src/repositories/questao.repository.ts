@@ -1,5 +1,6 @@
 import { Questao } from '@gerenciador-provas/shared';
 import { QuestaoModel } from '../database/questao.schema';
+import mongoose from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -63,8 +64,18 @@ export class QuestaoRepository {
    * Buscar questões por IDs (para prova)
    */
   async buscarPorIds(ids: string[]): Promise<Questao[]> {
-    const docs = await QuestaoModel.find({ id: { $in: ids } });
-    return docs.map((doc) => doc.toObject());
+    console.log('[QuestaoRepository] buscarPorIds - Buscando', ids.length, 'questões');
+    try {
+      // Usar diretamente o driver MongoDB, não o Mongoose
+      const collection = mongoose.connection.collection('questaos');
+      console.log('[QuestaoRepository] Usando collection.find() direto');
+      const questoes = await collection.find({ id: { $in: ids } }).toArray();
+      console.log('[QuestaoRepository] Encontradas', questoes.length, 'questões');
+      return questoes as any as Questao[];
+    } catch (error) {
+      console.error('[QuestaoRepository] Erro em buscarPorIds:', (error as Error).message);
+      throw error;
+    }
   }
 
   /**

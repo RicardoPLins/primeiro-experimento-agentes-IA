@@ -82,13 +82,24 @@ export class QuestaoController {
    */
   private tratarErro(erro: unknown, res: Response): void {
     if (erro instanceof ApplicationError) {
+      console.warn(`[QuestaoController] ${erro.code}: ${erro.message}`, erro.details);
       res.status(erro.statusCode).json({
         code: erro.code,
         message: erro.message,
         details: erro.details,
       });
+    } else if (erro instanceof Error) {
+      console.error('[QuestaoController] Erro não tratado:', {
+        name: erro.name,
+        message: erro.message,
+        stack: erro.stack,
+      });
+      res.status(500).json({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: erro.message || 'Erro interno do servidor',
+      });
     } else {
-      console.error('[Erro não tratado]', erro);
+      console.error('[QuestaoController] Erro desconhecido:', erro);
       res.status(500).json({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro interno do servidor',

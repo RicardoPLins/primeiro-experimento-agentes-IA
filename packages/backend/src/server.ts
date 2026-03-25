@@ -17,6 +17,16 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Middleware de debug para requisições POST
+app.use((req: Request, _res: Response, next) => {
+  if (req.method === 'POST' || req.method === 'PUT') {
+    console.log(`[${req.method}] ${req.path}`, {
+      body: JSON.stringify(req.body).substring(0, 500),
+    });
+  }
+  next();
+});
+
 // Health-check endpoint
 app.get('/health', async (_req: Request, res: Response) => {
   const isConnected = mongoConnection.isConnected();
@@ -37,18 +47,24 @@ app.use('/api/provas', provaRoutes);
 // Middleware de tratamento de erros global
 app.use((err: unknown, _req: Request, res: Response) => {
   if (err instanceof ApplicationError) {
+    console.warn(`[ApplicationError] ${err.code}: ${err.message}`, err.details);
     res.status(err.statusCode).json({
       code: err.code,
       message: err.message,
       details: err.details,
     });
   } else if (err instanceof Error) {
-    console.error('[Erro não tratado]', err);
+    console.error('[Erro não tratado]', {
+      name: err.name,
+      message: err.message,
+      stack: err.stack,
+    });
     res.status(500).json({
       code: 'INTERNAL_SERVER_ERROR',
-      message: err.message,
+      message: err.message || 'Erro interno do servidor',
     });
   } else {
+    console.error('[Erro desconhecido]', err);
     res.status(500).json({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Erro interno do servidor',

@@ -1,5 +1,6 @@
 import { Prova } from '@gerenciador-provas/shared';
 import { ProvaModel } from '../database/prova.schema';
+import { QuestaoModel } from '../database/questao.schema';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -17,16 +18,50 @@ export class ProvaRepository {
       updatedAt: new Date(),
     };
 
-    const doc = await ProvaModel.create(provaComId);
-    return doc.toObject();
+    // Extrair apenas os IDs das questões para salvar no MongoDB
+    const dadosParaSalvar = {
+      ...provaComId,
+      questoes: prova.questoes.map((q) => (typeof q === 'string' ? q : q.id)),
+    };
+
+    await ProvaModel.create(dadosParaSalvar);
+    
+    // Buscar a prova criada e popular as questões manualmente
+    return this.buscarPorId(provaComId.id) as Promise<Prova>;
+  }
+
+  /**
+   * Método auxiliar para popular questões manualmente
+   */
+  private async populateQuestoes(doc: any): Promise<Prova> {
+    if (!doc) return null as any;
+    const prova = doc.toObject();
+    if (prova.questoes && Array.isArray(prova.questoes)) {
+      const questoesIds = prova.questoes.filter((q: any): q is string => typeof q === 'string');
+      if (questoesIds.length > 0) {
+        try {
+          // Usar .lean() para evitar problemas com ObjectId
+          const questoes = await QuestaoModel.find({ id: { $in: questoesIds } }).lean().exec();
+          prova.questoes = questoesIds.map(
+            (id: string) => questoes.find((q: any) => q.id === id) || { id }
+          ) as any;
+        } catch (erro) {
+          console.error('[ProvaRepository] Erro ao popular questões:', erro);
+          // Se falhar, apenas retorna os IDs
+          prova.questoes = questoesIds as any;
+        }
+      }
+    }
+    return prova;
   }
 
   /**
    * Buscar prova por ID
    */
   async buscarPorId(id: string): Promise<Prova | null> {
-    const doc = await ProvaModel.findOne({ id }).populate('questoes');
-    return doc ? doc.toObject() : null;
+    const doc = await ProvaModel.findOne({ id });
+    if (!doc) return null;
+    return this.populateQuestoes(doc);
   }
 
   /**
@@ -34,19 +69,30 @@ export class ProvaRepository {
    */
   async listarTodas(): Promise<Prova[]> {
     const docs = await ProvaModel.find();
-    return docs.map((doc) => doc.toObject());
+    return Promise.all(docs.map((doc) => this.populateQuestoes(doc)));
   }
 
   /**
    * Atualizar prova
    */
   async atualizar(id: string, atualizacoes: Partial<Prova>): Promise<Prova | null> {
+    // Extrair apenas os IDs das questões se estiverem sendo atualizadas
+    const dados: any = {
+      ...atualizacoes,
+      updatedAt: new Date(),
+    };
+    
+    if (dados.questoes) {
+      dados.questoes = dados.questoes.map((q: any) => (typeof q === 'string' ? q : q.id));
+    }
+
     const doc = await ProvaModel.findOneAndUpdate(
       { id },
-      { ...atualizacoes, updatedAt: new Date() },
+      dados,
       { new: true }
     );
-    return doc ? doc.toObject() : null;
+    if (!doc) return null;
+    return this.populateQuestoes(doc);
   }
 
   /**

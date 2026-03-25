@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -53,18 +53,34 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
     formState: { errors },
     watch,
     control,
+    reset,
   } = useForm<FormProvaData>({
     resolver: zodResolver(provaSchema),
     defaultValues: {
-      nome: prova?.nome || '',
-      disciplina: prova?.disciplina || '',
-      professor: prova?.professor || '',
-      turma: prova?.turma || '',
-      data: prova?.data ? new Date(prova.data).toISOString().split('T')[0] : '',
-      identificacao: prova?.identificacao || 'LETRAS',
-      questoes: prova?.questoes?.map((q) => q.id) || [],
+      nome: '',
+      disciplina: '',
+      professor: '',
+      turma: '',
+      data: '',
+      identificacao: 'LETRAS',
+      questoes: [],
     },
   });
+
+  // Atualizar valores quando prova for carregada (para edição)
+  useEffect(() => {
+    if (prova) {
+      reset({
+        nome: prova.nome || '',
+        disciplina: prova.disciplina || '',
+        professor: prova.professor || '',
+        turma: prova.turma || '',
+        data: prova.data ? new Date(prova.data).toISOString().split('T')[0] : '',
+        identificacao: prova.identificacao || 'LETRAS',
+        questoes: prova.questoes?.map((q) => q.id) || [],
+      });
+    }
+  }, [prova, reset]);
 
   const questoesIds = watch('questoes');
   const questoesSelecionadas = useMemo(
@@ -74,27 +90,33 @@ export const FormProva: FC<FormProvaProps> = ({ prova, onSuccess }) => {
 
   const onSubmit = async (data: FormProvaData) => {
     try {
+      if (data.questoes.length !== 5) {
+        showToast('Selecione exatamente 5 questões', 'error');
+        return;
+      }
+
       const payload = {
         nome: data.nome,
         disciplina: data.disciplina,
         professor: data.professor,
         turma: data.turma,
-        data: new Date(data.data),
+        data: new Date(data.data).toISOString(),
         identificacao: data.identificacao as Identificacao,
         questoesIds: data.questoes,
       };
 
-      if (prova) {
+      if (prova && prova.id) {
         await atualizarMutation?.mutateAsync(payload as any);
-        showToast('Prova atualizada!', 'success');
+        showToast('Prova atualizada com sucesso!', 'success');
       } else {
         await criarMutation.mutateAsync(payload as any);
-        showToast('Prova criada!', 'success');
+        showToast('Prova criada com sucesso!', 'success');
       }
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar prova:', error);
-      showToast('Erro ao salvar prova', 'error');
+      const mensagemErro = error?.message || 'Erro ao salvar prova';
+      showToast(mensagemErro, 'error');
     }
   };
 

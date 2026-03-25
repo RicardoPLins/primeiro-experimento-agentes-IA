@@ -13,7 +13,8 @@ const ProvaSchema = new Schema<Prova>(
     data: { type: Date, required: true },
     turma: { type: String, required: true },
     identificacao: { type: String, enum: ['LETRAS', 'POTENCIAS_DE_2'], required: true },
-    questoes: [{ type: String, ref: 'Questao' }],
+    // Array de IDs (strings UUID) das questões
+    questoes: [String],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },

@@ -6,6 +6,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "seed": "tsx src/database/seed.ts",
     "test": "jest",
     "test:bdd": "cucumber-js",
     "lint": "eslint src/**/*.ts"

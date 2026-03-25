@@ -13,18 +13,32 @@ export class ProvaController {
    */
   async criar(req: Request, res: Response): Promise<void> {
     try {
+      console.log('[ProvaController.criar] Iniciando...');
+      console.log('[ProvaController.criar] Body:', JSON.stringify(req.body));
+      
       const { nome, disciplina, professor, data, turma, identificacao, questoesIds } = req.body;
+      console.log('[ProvaController.criar] Convertendo data...');
+      const dataConvertida = new Date(data);
+      console.log('[ProvaController.criar] Data convertida:', dataConvertida);
+      
+      console.log('[ProvaController.criar] Chamando provaService.criar...');
       const prova = await provaService.criar(
         nome,
         disciplina,
         professor,
-        new Date(data),
+        dataConvertida,
         turma,
         identificacao as Identificacao,
         questoesIds
       );
+      console.log('[ProvaController.criar] Prova criada com sucesso');
       res.status(201).json(prova);
     } catch (erro) {
+      console.error('[ProvaController.criar] Erro capturado:', {
+        name: (erro as Error).name,
+        message: (erro as Error).message,
+        stack: (erro as Error).stack,
+      });
       this.tratarErro(erro, res);
     }
   }
@@ -100,13 +114,24 @@ export class ProvaController {
    */
   private tratarErro(erro: unknown, res: Response): void {
     if (erro instanceof ApplicationError) {
+      console.warn(`[ProvaController] ${erro.code}: ${erro.message}`, erro.details);
       res.status(erro.statusCode).json({
         code: erro.code,
         message: erro.message,
         details: erro.details,
       });
+    } else if (erro instanceof Error) {
+      console.error('[ProvaController] Erro não tratado:', {
+        name: erro.name,
+        message: erro.message,
+        stack: erro.stack,
+      });
+      res.status(500).json({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: erro.message || 'Erro interno do servidor',
+      });
     } else {
-      console.error('[Erro não tratado]', erro);
+      console.error('[ProvaController] Erro desconhecido:', erro);
       res.status(500).json({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Erro interno do servidor',
