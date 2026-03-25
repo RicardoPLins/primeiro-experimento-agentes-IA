@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FormQuestao } from '../components/FormQuestao';
 import { useQuestao } from '../hooks/useQuestoes';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Loader } from 'lucide-react';
+import { ArrowBack } from '@mui/icons-material';
+import { Box, Button as MuiButton, Container, CircularProgress, Typography } from '@mui/material';
 
 export const CriarEditarQuestao: FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -11,46 +12,72 @@ export const CriarEditarQuestao: FC = () => {
   const { data: questao, isLoading } = useQuestao(id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 p-6">
-      {/* Back Button */}
-      <motion.button
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        onClick={() => navigate('/questoes')}
-        className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        Voltar para Questões
-      </motion.button>
-
-      {/* Loading State */}
-      {id && isLoading && (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        py: 4,
+      }}
+    >
+      <Container maxWidth="md">
+        {/* Back Button */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex items-center justify-center py-20"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
         >
-          <div className="text-center">
-            <div className="animate-spin mb-4">
-              <Loader className="w-8 h-8 text-blue-600" />
-            </div>
-            <p className="text-gray-600">Carregando questão...</p>
-          </div>
+          <MuiButton
+            startIcon={<ArrowBack />}
+            onClick={() => navigate('/questoes')}
+            sx={{
+              mb: 3,
+              color: '#fff',
+              textTransform: 'none',
+              fontSize: '1rem',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
+          >
+            Voltar para Questões
+          </MuiButton>
         </motion.div>
-      )}
 
-      {/* Form */}
-      {!isLoading && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <FormQuestao
-            questao={questao}
-            onSuccess={() => navigate('/questoes')}
-          />
-        </motion.div>
-      )}
-    </div>
+        {/* Loading State */}
+        {id && isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <Box
+              sx={{
+                textAlign: 'center',
+                py: 10,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 2,
+                boxShadow: 3,
+              }}
+            >
+              <CircularProgress size={50} sx={{ mb: 2, color: '#667eea' }} />
+              <Typography variant="body1" color="textSecondary">
+                Carregando questão...
+              </Typography>
+            </Box>
+          </motion.div>
+        )}
+
+        {/* Form */}
+        {!isLoading && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <FormQuestao
+              questao={questao}
+              onSuccess={() => navigate('/questoes')}
+            />
+          </motion.div>
+        )}
+      </Container>
+    </Box>
   );
 };
