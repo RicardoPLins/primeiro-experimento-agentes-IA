@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -16,10 +16,19 @@ import {
   CardContent,
   LinearProgress,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import { RelatorioNotas } from '@gerenciador-provas/shared';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import SaveIcon from '@mui/icons-material/Save';
 import { useRelatorios } from '../hooks/useRelatorios';
 
 interface ResultadoCorrecaoState {
@@ -41,8 +50,20 @@ export const ResultadoCorrecaoPage: React.FC = () => {
   const { salvarRelatorios } = useRelatorios();
 
   const state = location.state as ResultadoCorrecaoState;
-
   const { relatorios = [], estatisticas = {}, totalRelatorios = 0, modoCorrecao = '' } = state || {};
+
+  const [openDialog, setOpenDialog] = useState(false);
+  const [nomeLote, setNomeLote] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info',
+  });
 
   // Salvar relatórios automaticamente ao carregar a página
   useEffect(() => {
@@ -78,6 +99,70 @@ export const ResultadoCorrecaoPage: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleExportarProcessada = () => {
+    if (!nomeLote.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Por favor, informe um nome para o lote',
+        severity: 'error',
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    // Preparar dados para enviar
+    const relatoriosProcessados = relatorios.map((r) => ({
+      nome: r.nome,
+      cpf: r.cpf,
+      notaFinal: r.notaFinal,
+      modo: modoCorrecao,
+      acertos: r.notas.filter((n) => n.nota > 0).length,
+      totalQuestoes: r.notas.length,
+    }));
+
+    const payload = {
+      nomeLote: nomeLote.trim(),
+      modoCorrecao,
+      relatorios: relatoriosProcessados,
+    };
+
+    fetch('/api/correcao/processadas', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Erro ao salvar');
+        return res.json();
+      })
+      .then(() => {
+        setSnackbar({
+          open: true,
+          message: 'Correção salva com sucesso em "Correções Processadas"!',
+          severity: 'success',
+        });
+        setOpenDialog(false);
+        setNomeLote('');
+        // Navegar para correções processadas após 1.5s
+        setTimeout(() => {
+          navigate('/correcoes-processadas');
+        }, 1500);
+      })
+      .catch(() => {
+        setSnackbar({
+          open: true,
+          message: 'Erro ao salvar correção. Tente novamente.',
+          severity: 'error',
+        });
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const mediaGeral = useMemo(() => {
@@ -162,7 +247,7 @@ export const ResultadoCorrecaoPage: React.FC = () => {
       </Box>
 
       {/* Botão Exportar */}
-      <Box sx={{ mb: 3, textAlign: 'right' }}>
+      <Box sx={{ mb: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
         <Button
           variant="contained"
           startIcon={<FileDownloadIcon />}
@@ -170,6 +255,15 @@ export const ResultadoCorrecaoPage: React.FC = () => {
           disabled={relatorios.length === 0}
         >
           Exportar CSV
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<SaveIcon />}
+          onClick={() => setOpenDialog(true)}
+          disabled={relatorios.length === 0}
+          sx={{ backgroundColor: '#00897b' }}
+        >
+          Salvar em Correções Processadas
         </Button>
       </Box>
 
@@ -240,6 +334,52 @@ export const ResultadoCorrecaoPage: React.FC = () => {
           <Typography color="textSecondary">Nenhum resultado para exibir</Typography>
         </Paper>
       )}
+
+      {/* Dialog para salvar em Correções Processadas */}
+      <Dialog open={openDialog} onClose={() => !loading && setOpenDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Salvar em Correções Processadas</DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Nome do Lote"
+            placeholder="Ex: Prova 1 - Turma A"
+            value={nomeLote}
+            onChange={(e) => setNomeLote(e.target.value)}
+            disabled={loading}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && !loading) {
+                handleExportarProcessada();
+              }
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleExportarProcessada}
+            variant="contained"
+            disabled={loading || !nomeLote.trim()}
+            startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+          >
+            {loading ? 'Salvando...' : 'Salvar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar para feedback */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

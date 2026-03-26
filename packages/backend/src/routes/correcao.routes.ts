@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import correcaoController from '../controllers/correcao.controller';
+import correcaoProcessadaController from '../controllers/correcao-processada.controller';
 
 const router = Router();
 
@@ -47,6 +48,34 @@ router.delete(
 router.get(
   '/relatorios/:id/csv',
   asyncHandler((req, res) => correcaoController.exportarCSV(req, res))
+);
+
+/**
+ * Rotas de Correção Processada (Lotes)
+ */
+
+// POST /api/correcao/processadas - Salvar correção processada
+router.post(
+  '/processadas',
+  asyncHandler((req, res) => correcaoProcessadaController.salvar(req, res))
+);
+
+// GET /api/correcao/processadas - Listar correções processadas
+router.get(
+  '/processadas',
+  asyncHandler((req, res) => correcaoProcessadaController.listar(req, res))
+);
+
+// GET /api/correcao/processadas/:id - Obter correção processada
+router.get(
+  '/processadas/:id',
+  asyncHandler((req, res) => correcaoProcessadaController.obter(req, res))
+);
+
+// DELETE /api/correcao/processadas/:id - Deletar correção processada
+router.delete(
+  '/processadas/:id',
+  asyncHandler((req, res) => correcaoProcessadaController.deletar(req, res))
 );
 
 // GET /api/correcao/estatisticas - Gerar estatísticas

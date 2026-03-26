@@ -56,7 +56,7 @@ export const Dashboard: FC = () => {
     {
       number: 2,
       title: 'Montar Prova',
-      description: 'Selecione 5 ou mais questões para compor sua prova',
+      description: 'Selecione 5 questões para compor sua prova',
       icon: FileTextIcon,
       status: 'ready',
       action: () => navigate('/provas'),

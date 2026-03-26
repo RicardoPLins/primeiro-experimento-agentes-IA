@@ -5,6 +5,7 @@ import {
   LibraryBooks as BookOpenIcon,
   Description as FileTextIcon,
   CheckBox as CheckSquareIcon,
+  FolderOpen as FolderOpenIcon,
   Settings as SettingsIcon,
   Help as HelpCircleIcon,
 } from '@mui/icons-material';
@@ -29,6 +30,7 @@ export const Sidebar: FC = () => {
     { icon: BookOpenIcon, label: 'Questões', path: '/questoes' },
     { icon: FileTextIcon, label: 'Provas', path: '/provas' },
     { icon: CheckSquareIcon, label: 'Correção', path: '/correcao' },
+    { icon: FolderOpenIcon, label: 'Correções Processadas', path: '/correcoes-processadas' },
   ];
 
   const secondaryItems = [
