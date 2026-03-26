@@ -1,71 +1,68 @@
 import { 
-  Questao, 
   RelatorioNotas,
-  NotaQuestao,
   ModoCorrecao,
-  RespostaAluno,
 } from '@gerenciador-provas/shared';
 import { ValidationError } from '../errors/ApplicationError';
-import provaIndividualRepository from '../repositories/prova-individual.repository';
-import relatorioNotasRepository from '../repositories/relatorio-notas.repository';
 
 /**
- * Service para correção de provas
- * Implementa dois modos: RIGOROSA (tudo ou nada) e MENOS_RIGOROSA (proporcional)
+ * Service para correção de provas - Comparação genérica de CSVs
  */
 export class CorrecaoService {
   /**
-   * Decomposição de potências de 2 - retorna array de potências
-   * Exemplo: 13 = 8 + 4 + 1 = [1, 4, 8]
+   * Comparar duas respostas - modo RIGOROSA (tudo ou nada)
    */
-  private decompor(numero: number): number[] {
-    const potencias = [1, 2, 4, 8, 16];
-    const resultado: number[] = [];
-    
-    for (const pot of potencias) {
-      if (numero & pot) {
-        resultado.push(pot);
-      }
-    }
-    
-    return resultado.sort((a, b) => a - b);
+  private compararRespostasRigorosa(resposta: string, gabarito: string): boolean {
+    return resposta.trim().toUpperCase() === gabarito.trim().toUpperCase();
   }
 
   /**
-   * Parser para CSV de Gabarito
-   * Formato esperado: numero_prova, resposta_q1, resposta_q2, ...
+   * Comparar duas respostas - modo MENOS_RIGOROSA (aceita similar)
    */
-  parseCSVGabarito(conteudoCSV: string): Map<number, string[]> {
+  private compararRespostasFlexivel(resposta: string, gabarito: string): boolean {
+    const r = resposta.trim().toUpperCase();
+    const g = gabarito.trim().toUpperCase();
+    
+    // Aceita se for igual ou similar (primeira letra igual)
+    return r === g || r.charAt(0) === g.charAt(0);
+  }
+
+  /**
+   * Parser simples para CSV de Gabarito
+   * Formato: Prova,Q1,Q2,Q3,Q4,Q5
+   *          1,E,C,D,E,C
+   */
+  private parseCSVGabaritoSimples(conteudoCSV: string): Map<string, string[]> {
     try {
       const linhas = conteudoCSV.trim().split('\n');
       if (linhas.length < 2) {
         throw new ValidationError('CSV de gabarito vazio ou inválido', {});
       }
 
-      const gabaritos = new Map<number, string[]>();
+      const gabaritos = new Map<string, string[]>();
 
-      // Pular cabeçalho
+      // Pular cabeçalho (linha 0)
       for (let i = 1; i < linhas.length; i++) {
         const linha = linhas[i].trim();
         if (!linha) continue;
 
-        const partes = linha.split(',');
-        const numeroProva = parseInt(partes[0].trim(), 10);
+        const partes = linha.split(',').map(p => p.trim());
+        const numeroProva = partes[0]; // String: "1", "2", "3"
 
-        if (isNaN(numeroProva)) {
-          console.warn(`[parseCSVGabarito] Linha ${i} com número de prova inválido: ${partes[0]}`);
+        if (!numeroProva) {
+          console.warn(`[parseCSVGabaritoSimples] Linha ${i} sem número de prova`);
           continue;
         }
 
         // Respostas começam da coluna 1
-        const respostas = partes.slice(1).map((r) => r.trim());
+        const respostas = partes.slice(1);
         gabaritos.set(numeroProva, respostas);
+        console.log(`[parseCSVGabaritoSimples] Prova ${numeroProva}: ${respostas.join(',')}`);
       }
 
-      console.log(`[parseCSVGabarito] ✅ Parseado gabarito com ${gabaritos.size} provas`);
+      console.log(`[parseCSVGabaritoSimples] ✅ Parseado gabarito com ${gabaritos.size} provas`);
       return gabaritos;
     } catch (error) {
-      console.error('[parseCSVGabarito] Erro:', error);
+      console.error('[parseCSVGabaritoSimples] Erro:', error);
       throw new ValidationError('Erro ao parsear CSV de gabarito', {
         erro: error instanceof Error ? error.message : 'Desconhecido',
       });
@@ -73,54 +70,44 @@ export class CorrecaoService {
   }
 
   /**
-   * Parser para CSV de Respostas
-   * Formato: timestamp, email, numero_prova, resposta_q1, resposta_q2, ...
+   * Parser simples para CSV de Respostas
+   * Formato: Prova,Q1,Q2,Q3,Q4,Q5
+   *          1,E,C,D,E,C
    */
-  parseCSVRespostas(conteudoCSV: string): RespostaAluno[] {
+  private parseCSVRespostasSimples(conteudoCSV: string): Array<{ prova: string; respostas: string[] }> {
     try {
       const linhas = conteudoCSV.trim().split('\n');
       if (linhas.length < 2) {
         throw new ValidationError('CSV de respostas vazio ou inválido', {});
       }
 
-      const respostas: RespostaAluno[] = [];
+      const respostas: Array<{ prova: string; respostas: string[] }> = [];
 
       // Pular cabeçalho
       for (let i = 1; i < linhas.length; i++) {
         const linha = linhas[i].trim();
         if (!linha) continue;
 
-        const partes = linha.split(',');
-        
-        if (partes.length < 3) {
-          console.warn(`[parseCSVRespostas] Linha ${i} com formato inválido`);
+        const partes = linha.split(',').map(p => p.trim());
+        const numeroProva = partes[0];
+
+        if (!numeroProva) {
+          console.warn(`[parseCSVRespostasSimples] Linha ${i} sem número de prova`);
           continue;
         }
 
-        const timestamp = new Date(partes[0].trim());
-        const email = partes[1].trim();
-        const numeroProva = parseInt(partes[2].trim(), 10);
-
-        if (isNaN(numeroProva) || !email) {
-          console.warn(`[parseCSVRespostas] Linha ${i} com dados inválidos`);
-          continue;
-        }
-
-        // Respostas começam da coluna 3
-        const respostasAluno = partes.slice(3).map((r) => r.trim());
-
+        const respostasAluno = partes.slice(1);
         respostas.push({
-          numeroProva,
-          email,
+          prova: numeroProva,
           respostas: respostasAluno,
-          timestamp: isNaN(timestamp.getTime()) ? new Date() : timestamp,
         });
+        console.log(`[parseCSVRespostasSimples] Prova ${numeroProva}: ${respostasAluno.join(',')}`);
       }
 
-      console.log(`[parseCSVRespostas] ✅ Parseado ${respostas.length} alunos`);
+      console.log(`[parseCSVRespostasSimples] ✅ Parseado ${respostas.length} linhas`);
       return respostas;
     } catch (error) {
-      console.error('[parseCSVRespostas] Erro:', error);
+      console.error('[parseCSVRespostasSimples] Erro:', error);
       throw new ValidationError('Erro ao parsear CSV de respostas', {
         erro: error instanceof Error ? error.message : 'Desconhecido',
       });
@@ -128,127 +115,9 @@ export class CorrecaoService {
   }
 
   /**
-   * Corrigir uma questão do tipo LETRAS
-   * Modo RIGOROSA: deve ser exatamente igual
-   * Modo MENOS_RIGOROSA: aceita a mesma resposta
-   */
-  private corrigirQuestaoLetra(
-    respostaAluno: string,
-    gabaritoResposta: string,
-    modo: ModoCorrecao
-  ): number {
-    const respLimpaNormalizado = (respostaAluno || '').trim().toUpperCase();
-    const gabLimpaNormalizado = (gabaritoResposta || '').trim().toUpperCase();
-
-    if (modo === 'RIGOROSA') {
-      return respLimpaNormalizado === gabLimpaNormalizado ? 1 : 0;
-    } else {
-      // MENOS_RIGOROSA: também exige igualdade para LETRAS
-      return respLimpaNormalizado === gabLimpaNormalizado ? 1 : 0;
-    }
-  }
-
-  /**
-   * Corrigir uma questão do tipo POTENCIAS_DE_2
-   * Modo RIGOROSA: todas as alternativas devem estar corretas (soma exata)
-   * Modo MENOS_RIGOROSA: proporcional - conta alternativas corretas vs totais
-   */
-  private corrigirQuestaoPotencias(
-    respostaAluno: string,
-    gabaritoResposta: string,
-    questao: Questao,
-    modo: ModoCorrecao
-  ): number {
-    try {
-      const respNumero = parseInt(respostaAluno?.trim() || '0', 10);
-      const gabNumero = parseInt(gabaritoResposta?.trim() || '0', 10);
-
-      if (isNaN(respNumero) || isNaN(gabNumero)) {
-        return 0;
-      }
-
-      const alternativasCorretas = questao.alternativas.filter((a) => a.isCorreta).length;
-      
-      if (modo === 'RIGOROSA') {
-        // Tudo ou nada - deve ser exatamente igual
-        return respNumero === gabNumero ? 1 : 0;
-      } else {
-        // MENOS_RIGOROSA: proporcional
-        const respDecomposta = this.decompor(respNumero);
-        const gabDecomposta = this.decompor(gabNumero);
-
-        // Contar acertos
-        const acertos = respDecomposta.filter((p) => gabDecomposta.includes(p)).length;
-        
-        // Se não marcou nada e gabarito tb não tem
-        if (acertos === 0 && gabNumero === 0 && respNumero === 0) {
-          return 1;
-        }
-
-        // Se alternativas corretas > 0, calcula proporção
-        if (alternativasCorretas > 0) {
-          return acertos / alternativasCorretas;
-        }
-
-        // Fallback
-        return respNumero === gabNumero ? 1 : 0;
-      }
-    } catch (error) {
-      console.error('[corrigirQuestaoPotencias] Erro:', error);
-      return 0;
-    }
-  }
-
-  /**
-   * Corrigir todas as respostas de um aluno
-   */
-  private corrigirAluno(
-    respostasAluno: string[],
-    gabarito: string[],
-    prova: Questao[],
-    modo: ModoCorrecao
-  ): { notas: NotaQuestao[]; notaFinal: number } {
-    const notas: NotaQuestao[] = [];
-    let somaNotas = 0;
-
-    const totalQuestoes = Math.min(respostasAluno.length, gabarito.length, prova.length);
-
-    for (let i = 0; i < totalQuestoes; i++) {
-      const questao = prova[i];
-      const resposta = respostasAluno[i];
-      const gabaritoQuestao = gabarito[i];
-
-      let nota = 0;
-
-      if (questao.tipoIdentificacao === 'LETRAS') {
-        nota = this.corrigirQuestaoLetra(resposta, gabaritoQuestao, modo);
-      } else {
-        // POTENCIAS_DE_2
-        nota = this.corrigirQuestaoPotencias(resposta, gabaritoQuestao, questao, modo);
-      }
-
-      notas.push({
-        questaoIndex: i,
-        nota,
-        peso: 1, // Peso igual para todas
-      });
-
-      somaNotas += nota;
-    }
-
-    // Calcular nota final (0-10)
-    const notaFinal = totalQuestoes > 0 ? (somaNotas / totalQuestoes) * 10 : 0;
-
-    return {
-      notas,
-      notaFinal: Math.round(notaFinal * 100) / 100, // Arredondar para 2 casas decimais
-    };
-  }
-
-  /**
-   * Corrigir todas as provas
+   * Corrigir todas as provas - Comparação genérica
    * Entrada: gabarito CSV, respostas CSV, modo de correção
-   * Saída: relatórios salvos no MongoDB
+   * Saída: relatórios com porcentagem de acertos
    */
   async corrigirProvas(
     provaId: string,
@@ -257,31 +126,24 @@ export class CorrecaoService {
     modoCorrecao: ModoCorrecao
   ): Promise<RelatorioNotas[]> {
     try {
-      console.log(`\n[CorrecaoService.corrigirProvas] ===== INICIANDO CORREÇÃO =====`);
-      console.log(`[CorrecaoService.corrigirProvas] Prova: ${provaId}`);
+      console.log(`\n[CorrecaoService.corrigirProvas] ===== INICIANDO CORREÇÃO GENÉRICA =====`);
       console.log(`[CorrecaoService.corrigirProvas] Modo: ${modoCorrecao}`);
 
-      // 1. Parsear CSVs (sem validação de banco - comparação genérica de arquivos)
-      const gabaritos = this.parseCSVGabarito(csvGabarito);
-      const respostas = this.parseCSVRespostas(csvRespostas);
+      // 1. Parsear CSVs
+      const gabaritos = this.parseCSVGabaritoSimples(csvGabarito);
+      const respostasListas = this.parseCSVRespostasSimples(csvRespostas);
 
       console.log(`[CorrecaoService.corrigirProvas] ✅ CSVs parseados`);
+      console.log(`   - Gabaritos: ${gabaritos.size}`);
+      console.log(`   - Respostas: ${respostasListas.length}`);
 
-      // 3. Agrupar respostas por email
-      const respostasAgrupadas = new Map<string, RespostaAluno>();
-      for (const resposta of respostas) {
-        // Usar a última resposta do aluno se houver duplicatas
-        respostasAgrupadas.set(resposta.email, resposta);
-      }
-
-      console.log(`[CorrecaoService.corrigirProvas] 👥 Total alunos únicos: ${respostasAgrupadas.size}`);
-
-      // 4. Corrigir cada aluno
+      // 2. Corrigir cada linha de respostas
       const relatórios: RelatorioNotas[] = [];
+      let index = 0;
 
-      for (const [email, respostaAluno] of respostasAgrupadas) {
+      for (const respostaLinha of respostasListas) {
         try {
-          const numeroProva = respostaAluno.numeroProva;
+          const numeroProva = respostaLinha.prova;
           const gabaritoResposta = gabaritos.get(numeroProva);
 
           if (!gabaritoResposta) {
@@ -289,55 +151,57 @@ export class CorrecaoService {
             continue;
           }
 
-          // Obter questões na ordem da prova individual
-          const provaIndividual = await provaIndividualRepository.buscarPorProvaENumero(
-            provaId,
-            numeroProva
-          );
+          // Comparar questão por questão
+          let acertos = 0;
+          const totalQuestoes = Math.min(respostaLinha.respostas.length, gabaritoResposta.length);
 
-          if (!provaIndividual) {
-            console.warn(`[CorrecaoService.corrigirProvas] ⚠️ Prova individual ${numeroProva} não encontrada`);
-            continue;
+          for (let i = 0; i < totalQuestoes; i++) {
+            const resposta = respostaLinha.respostas[i];
+            const gabarito = gabaritoResposta[i];
+
+            let acertou = false;
+            if (modoCorrecao === 'RIGOROSA') {
+              acertou = this.compararRespostasRigorosa(resposta, gabarito);
+            } else {
+              acertou = this.compararRespostasFlexivel(resposta, gabarito);
+            }
+
+            if (acertou) {
+              acertos++;
+            }
+
+            console.log(`    Q${i + 1}: ${resposta} vs ${gabarito} = ${acertou ? '✅' : '❌'}`);
           }
 
-          // Para comparação genérica de arquivos, não validamos questões do banco
-          // Usamos diretamente as respostas do arquivo
-          const questoesOrdenadas: Questao[] = [];
+          // Calcular porcentagem
+          const porcentagem = totalQuestoes > 0 ? (acertos / totalQuestoes) * 100 : 0;
 
-          // Corrigir
-          const { notas, notaFinal } = this.corrigirAluno(
-            respostaAluno.respostas,
-            gabaritoResposta,
-            questoesOrdenadas,
-            modoCorrecao
-          );
-
-          // Salvar relatório
-          const relatorio = await relatorioNotasRepository.criar({
-            email,
-            nome: respostaAluno.nome,
-            cpf: respostaAluno.cpf,
-            notaFinal,
-            notas,
+          const relatorio: RelatorioNotas = {
+            id: `${provaId}-${numeroProva}-${index}`,
+            email: `prova-${numeroProva}`,
+            nome: `Prova ${numeroProva}`,
+            cpf: undefined,
+            notaFinal: parseFloat(porcentagem.toFixed(2)),
+            notas: Array(totalQuestoes).fill(null).map((_, i) => ({
+              questaoIndex: i,
+              nota: respostaLinha.respostas[i] === gabaritoResposta[i] ? 1 : 0,
+              peso: 1,
+            })),
             modoCorrecao,
-          });
+            createdAt: new Date(),
+          };
 
           relatórios.push(relatorio);
+          console.log(`✅ Prova ${numeroProva}: ${acertos}/${totalQuestoes} acertos (${porcentagem.toFixed(2)}%)\n`);
 
-          console.log(
-            `[CorrecaoService.corrigirProvas] ✅ ${email}: ${notaFinal.toFixed(2)}/10`
-          );
+          index++;
         } catch (error) {
-          console.error(
-            `[CorrecaoService.corrigirProvas] ❌ Erro ao corrigir ${email}:`,
-            error
-          );
-          // Continuar com próximo aluno
+          console.error(`[CorrecaoService.corrigirProvas] Erro ao corrigir linha:`, error);
+          continue;
         }
       }
 
-      console.log(`[CorrecaoService.corrigirProvas] ✅ Correção concluída: ${relatórios.length} relatórios gerados\n`);
-
+      console.log(`[CorrecaoService.corrigirProvas] ✅ Correção concluída - ${relatórios.length} provas corrigidas`);
       return relatórios;
     } catch (error) {
       console.error('[CorrecaoService.corrigirProvas] Erro fatal:', error);
@@ -346,66 +210,67 @@ export class CorrecaoService {
   }
 
   /**
-   * Gerar relatório da turma com estatísticas
+   * Gerar relatório com curva de distribuição
    */
-  async gerarRelatorioCurva(relatorios: RelatorioNotas[]): Promise<any> {
+  async gerarRelatorioCurva(
+    relatorios: RelatorioNotas[]
+  ): Promise<{
+    media: number;
+    mediana: number;
+    desvio: number;
+    maximo: number;
+    minimo: number;
+  }> {
     if (relatorios.length === 0) {
-      return {
-        total: 0,
-        mediaGeral: 0,
-        maiorNota: 0,
-        menorNota: 0,
-        mediana: 0,
-        desvio: 0,
-      };
+      return { media: 0, mediana: 0, desvio: 0, maximo: 0, minimo: 0 };
     }
 
-    const notas = relatorios.map((r) => r.notaFinal);
-    notas.sort((a, b) => a - b);
+    const notas = relatorios.map((r) => r.notaFinal).sort((a, b) => a - b);
 
-    const total = notas.length;
-    const mediaGeral = notas.reduce((a, b) => a + b, 0) / total;
-    const maiorNota = notas[total - 1];
-    const menorNota = notas[0];
+    // Média
+    const media = notas.reduce((a, b) => a + b, 0) / notas.length;
+
+    // Mediana
     const mediana =
-      total % 2 === 0 ? (notas[total / 2 - 1] + notas[total / 2]) / 2 : notas[Math.floor(total / 2)];
+      notas.length % 2 === 0
+        ? (notas[notas.length / 2 - 1] + notas[notas.length / 2]) / 2
+        : notas[Math.floor(notas.length / 2)];
 
     // Desvio padrão
-    const variancia =
-      notas.reduce((soma, nota) => soma + Math.pow(nota - mediaGeral, 2), 0) / total;
-    const desvio = Math.sqrt(variancia);
+    const desvio = Math.sqrt(
+      notas.reduce((sum, nota) => sum + Math.pow(nota - media, 2), 0) / notas.length
+    );
+
+    // Máximo e mínimo
+    const maximo = Math.max(...notas);
+    const minimo = Math.min(...notas);
 
     return {
-      total,
-      mediaGeral: Math.round(mediaGeral * 100) / 100,
-      maiorNota,
-      menorNota,
-      mediana,
-      desvio: Math.round(desvio * 100) / 100,
+      media: parseFloat(media.toFixed(2)),
+      mediana: parseFloat(mediana.toFixed(2)),
+      desvio: parseFloat(desvio.toFixed(2)),
+      maximo: parseFloat(maximo.toFixed(2)),
+      minimo: parseFloat(minimo.toFixed(2)),
     };
   }
-
   /**
    * Exportar relatórios para CSV
    */
-  async exportarCSV(relatorios: RelatorioNotas[]): Promise<string> {
-    let csv = 'email,nome,cpf,notaFinal,modoCorrecao,createdAt\n';
+  exportarCSV(relatorios: RelatorioNotas[]): string {
+    const linhas = ['Email,Nome,Nota Final,Total Questões,Acertos'];
 
-    for (const rel of relatorios) {
-      const linha = [
-        rel.email,
-        rel.nome || '',
-        rel.cpf || '',
-        rel.notaFinal,
-        rel.modoCorrecao,
-        rel.createdAt.toISOString(),
-      ].join(',');
+    for (const relatorio of relatorios) {
+      const totalQuestoes = relatorio.notas.length;
+      const acertos = relatorio.notas.filter((n) => n.nota > 0).length;
 
-      csv += linha + '\n';
+      linhas.push(
+        `${relatorio.email},${relatorio.nome || 'N/A'},${relatorio.notaFinal},${totalQuestoes},${acertos}`
+      );
     }
 
-    return csv;
+    return linhas.join('\n');
   }
 }
 
-export default new CorrecaoService();
+const correcaoService = new CorrecaoService();
+export default correcaoService;
