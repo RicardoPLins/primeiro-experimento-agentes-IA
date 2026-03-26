@@ -93,6 +93,14 @@ export class ProvaIndividualRepository {
     const resultado = await ProvaIndividualModel.deleteMany({ provaId });
     return resultado.deletedCount;
   }
+
+  /**
+   * Obter última série de uma prova
+   */
+  async ultimaSerie(provaId: string): Promise<number | null> {
+    const ultimo = await ProvaIndividualModel.findOne({ provaId }).sort({ serie: -1 });
+    return ultimo ? (ultimo.toObject() as any).serie || null : null;
+  }
 }
 
 export default new ProvaIndividualRepository();

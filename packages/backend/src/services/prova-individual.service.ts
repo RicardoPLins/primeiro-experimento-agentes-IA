@@ -28,6 +28,7 @@ export class ProvaIndividualService {
   /**
    * Gerar múltiplas provas individuais com questões e alternativas embaralhadas
    * INV-PRV-03: Cada prova individual tem ordem diferente de questões e alternativas
+   * Permite múltiplas séries/gerações com mesmos números
    */
   async gerarProvasIndividuais(
     provaId: string,
@@ -46,16 +47,19 @@ export class ProvaIndividualService {
         throw new ValidationError('Quantidade deve estar entre 1 e 1000', { quantidade });
       }
 
+      // Obter próximo número de série
+      const proximaSerie = await this.proximaSerie(provaId);
+
       const provasIndividuais: ProvaIndividual[] = [];
 
       // Gerar cada prova individual
       for (let i = 1; i <= quantidade; i++) {
         const seed = Date.now() + i;
-        const provaIndividual = await this.gerarProvaIndividual(prova, i, seed);
+        const provaIndividual = await this.gerarProvaIndividual(prova, i, seed, proximaSerie);
         provasIndividuais.push(provaIndividual);
       }
 
-      console.log(`✅ ${quantidade} provas individuais geradas para ${provaId}`);
+      console.log(`✅ ${quantidade} provas individuais geradas para ${provaId} (série ${proximaSerie})`);
       return provasIndividuais;
     } catch (error) {
       console.error('❌ Erro ao gerar provas individuais:', error);
@@ -69,7 +73,8 @@ export class ProvaIndividualService {
   private async gerarProvaIndividual(
     prova: Prova,
     numero: number,
-    seed: number
+    seed: number,
+    serie: number = 1
   ): Promise<ProvaIndividual> {
     // Embaralhar questões
     const questoesEmbaralhadas = this.seededShuffle(prova.questoes, seed);
@@ -102,6 +107,7 @@ export class ProvaIndividualService {
     const provaIndividual: ProvaIndividual = {
       provaId: prova.id,
       numero,
+      serie,
       questoesEmbaralhadas: questoesProcessadas,
       sementes: {},
     } as ProvaIndividual;
@@ -248,6 +254,14 @@ export class ProvaIndividualService {
       throw new NotFoundError('Prova Individual', id);
     }
     return provaIndividual;
+  }
+
+  /**
+   * Obter próximo número de série para uma prova
+   */
+  private async proximaSerie(provaId: string): Promise<number> {
+    const ultimaSerie = await provaIndividualRepository.ultimaSerie(provaId);
+    return (ultimaSerie || 0) + 1;
   }
 
   /**

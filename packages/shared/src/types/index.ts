@@ -37,6 +37,7 @@ export interface ProvaIndividual {
   id: string;
   provaId: string;
   numero: number;
+  serie: number;
   questoesEmbaralhadas: QuestaoEmbaralhada[];
   sementes: Record<number, number>;
   createdAt: Date;
