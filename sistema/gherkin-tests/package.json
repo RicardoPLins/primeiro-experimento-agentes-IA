@@ -1,0 +1,37 @@
+{
+  "name": "gherkin-tests",
+  "version": "1.0.0",
+  "description": "Testes BDD com Gherkin para o Gerenciador de Provas",
+  "scripts": {
+    "test": "cucumber-js",
+    "test:watch": "cucumber-js --watch",
+    "test:questoes": "cucumber-js questoes.feature",
+    "test:provas": "cucumber-js provas.feature",
+    "test:correcao": "cucumber-js correcao.feature",
+    "test:processadas": "cucumber-js correcoes-processadas.feature",
+    "test:parallel": "cucumber-js --parallel 2",
+    "report": "cucumber-js --format html:cucumber-report.html && open cucumber-report.html",
+    "lint": "eslint steps/**/*.ts"
+  },
+  "keywords": [
+    "cucumber",
+    "gherkin",
+    "bdd",
+    "testing",
+    "e2e"
+  ],
+  "author": "Sistema Gerenciador de Provas",
+  "license": "MIT",
+  "devDependencies": {
+    "@cucumber/cucumber": "^9.5.0",
+    "@types/chai": "^4.3.11",
+    "@types/node": "^20.10.6",
+    "chai": "^4.3.10",
+    "puppeteer": "^21.6.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  }
+}
