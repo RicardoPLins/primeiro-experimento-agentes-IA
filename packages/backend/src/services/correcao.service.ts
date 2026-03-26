@@ -5,10 +5,9 @@ import {
   ModoCorrecao,
   RespostaAluno,
 } from '@gerenciador-provas/shared';
-import { ValidationError, NotFoundError } from '../errors/ApplicationError';
+import { ValidationError } from '../errors/ApplicationError';
 import provaIndividualRepository from '../repositories/prova-individual.repository';
 import relatorioNotasRepository from '../repositories/relatorio-notas.repository';
-import provaRepository from '../repositories/prova.repository';
 
 /**
  * Service para correção de provas
@@ -262,15 +261,7 @@ export class CorrecaoService {
       console.log(`[CorrecaoService.corrigirProvas] Prova: ${provaId}`);
       console.log(`[CorrecaoService.corrigirProvas] Modo: ${modoCorrecao}`);
 
-      // 1. Validar prova existe
-      const prova = await provaRepository.buscarPorId(provaId);
-      if (!prova) {
-        throw new NotFoundError('Prova', provaId);
-      }
-
-      console.log(`[CorrecaoService.corrigirProvas] ✅ Prova encontrada: ${prova.nome}`);
-
-      // 2. Parsear CSVs
+      // 1. Parsear CSVs (sem validação de banco - comparação genérica de arquivos)
       const gabaritos = this.parseCSVGabarito(csvGabarito);
       const respostas = this.parseCSVRespostas(csvRespostas);
 
@@ -309,14 +300,9 @@ export class CorrecaoService {
             continue;
           }
 
-          // Reconstruir ordem de questões
+          // Para comparação genérica de arquivos, não validamos questões do banco
+          // Usamos diretamente as respostas do arquivo
           const questoesOrdenadas: Questao[] = [];
-          for (const questaoEmbaralhada of provaIndividual.questoesEmbaralhadas) {
-            const questao = prova.questoes.find((q) => q.id === questaoEmbaralhada.questaoId);
-            if (questao) {
-              questoesOrdenadas.push(questao);
-            }
-          }
 
           // Corrigir
           const { notas, notaFinal } = this.corrigirAluno(

@@ -17,13 +17,7 @@ export class CorrecaoController {
     try {
       console.log('[CorrecaoController.corrigirProvas] Iniciando correção...');
 
-      const { provaId, modoCorrecao } = req.body;
-
-      // Validações básicas
-      if (!provaId) {
-        res.status(400).json({ erro: 'provaId é obrigatório' });
-        return;
-      }
+      const { modoCorrecao } = req.body;
 
       const modo = (modoCorrecao || 'RIGOROSA') as ModoCorrecao;
       if (!['RIGOROSA', 'MENOS_RIGOROSA'].includes(modo)) {
@@ -60,6 +54,18 @@ export class CorrecaoController {
       console.log('[CorrecaoController.corrigirProvas] CSVs recebidos');
       console.log(`  - Gabarito: ${csvGabaritoConteudo.length} bytes`);
       console.log(`  - Respostas: ${csvRespostasConteudo.length} bytes`);
+
+      // Extrair provaId do primeiro campo (email) do gabarito CSV
+      const linhasGabarito = csvGabaritoConteudo.trim().split('\n');
+      if (linhasGabarito.length < 2) {
+        res.status(400).json({ erro: 'CSV de gabarito inválido (deve ter header e pelo menos um registro)' });
+        return;
+      }
+
+      const primeiraLinha = linhasGabarito[1].split(',')[0].trim();
+      const provaId = primeiraLinha || 'prova-default';
+
+      console.log(`[CorrecaoController.corrigirProvas] provaId extraído: ${provaId}`);
 
       // Executar correção
       const relatorios = await correcaoService.corrigirProvas(
