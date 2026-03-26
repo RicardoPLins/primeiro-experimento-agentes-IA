@@ -2,11 +2,13 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import fileUpload from 'express-fileupload';
 import 'dotenv/config';
 import mongoConnection from './database/mongo';
 import questaoRoutes from './routes/questao.routes';
 import provaRoutes from './routes/prova.routes';
 import provaIndividualRoutes from './routes/prova-individual.routes';
+import correcaoRoutes from './routes/correcao.routes';
 import { ApplicationError } from './errors/ApplicationError';
 
 const app: Application = express();
@@ -17,6 +19,7 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(fileUpload());
 
 // Middleware de debug para requisições POST
 app.use((req: Request, _res: Response, next) => {
@@ -45,6 +48,7 @@ app.get('/health', async (_req: Request, res: Response) => {
 app.use('/api/questoes', questaoRoutes);
 app.use('/api/provas', provaRoutes);
 app.use('/api/provas', provaIndividualRoutes);
+app.use('/api/correcao', correcaoRoutes);
 
 // Middleware de tratamento de erros global
 app.use((err: unknown, _req: Request, res: Response) => {

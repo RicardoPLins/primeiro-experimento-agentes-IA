@@ -11,6 +11,7 @@ import { CriarEditarProva } from './pages/CriarEditarProva';
 import { VisualizarProva } from './pages/VisualizarProva';
 import { ProvaIndividualPage } from './pages/ProvaIndividualPage';
 import { GerarProvasIndividuaisPage } from './pages/GerarProvasIndividuaisPage';
+import { CorrecaoPage } from './pages/CorrecaoPage';
 
 const queryClient = new QueryClient();
 
@@ -75,27 +76,7 @@ function App() {
               />
               <Route
                 path="/correcao"
-                element={
-                  <Box
-                    sx={{
-                      p: 6,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      height: '100%',
-                    }}
-                  >
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Box sx={{ fontSize: '4rem', mb: 2 }}>✅</Box>
-                      <Box sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#333', mb: 1 }}>
-                        Correção de Provas
-                      </Box>
-                      <Box sx={{ color: '#666' }}>
-                        Esta funcionalidade está em desenvolvimento
-                      </Box>
-                    </Box>
-                  </Box>
-                }
+                element={<CorrecaoPage />}
               />
               <Route
                 path="/relatorio"
