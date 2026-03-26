@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useState, useEffect } from 'react';
 import {
   LibraryBooks as BookOpenIcon,
   Description as FileTextIcon,
@@ -22,6 +22,25 @@ export const Dashboard: FC = () => {
   const navigate = useNavigate();
   const { data: provas = [] } = useProvas();
   const { data: questoes = [] } = useQuestoes();
+  const [correcoesProcesadasCount, setCorrecoesProcesadasCount] = useState(0);
+
+  // Carregar contagem de correções processadas
+  useEffect(() => {
+    fetch('/api/correcao/processadas', {
+      method: 'GET',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setCorrecoesProcesadasCount((data.correcoes || []).length);
+      })
+      .catch(() => {
+        setCorrecoesProcesadasCount(0);
+      });
+  }, []);
 
   const stats = [
     {
@@ -38,7 +57,7 @@ export const Dashboard: FC = () => {
     },
     {
       label: 'Correções Processadas',
-      value: 0,
+      value: correcoesProcesadasCount,
       icon: ZapIcon,
       color: '#f57c00',
     },
