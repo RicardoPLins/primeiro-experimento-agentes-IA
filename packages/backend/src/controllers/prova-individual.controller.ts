@@ -114,8 +114,6 @@ export class ProvaIndividualController {
     try {
       const { id } = req.params;
 
-      console.log(`[ProvaIndividualController.downloadZip] Gerando ZIP para ${id}`);
-
       // Buscar prova original para informações
       const provaOriginal = await provaIndividualService.listarPorProva(id);
       const primeiraProva = provaOriginal[0];
@@ -137,6 +135,19 @@ export class ProvaIndividualController {
 
       // Criar arquivo ZIP
       const archive = archiver('zip', { zlib: { level: 9 } });
+
+      // Tratamento de erro do archive
+      archive.on('error', (err: any) => {
+        console.error('[ProvaIndividualController.downloadZip] Erro no archive:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Erro ao criar ZIP' });
+        }
+      });
+
+      res.on('error', () => {
+        archive.abort();
+      });
+
       archive.pipe(res);
 
       // Adicionar README com informações
@@ -164,18 +175,26 @@ Data de Geração: ${new Date().toLocaleString('pt-BR')}
       for (const prova of provas) {
         try {
           const pdf = await relatorioProvaService.gerarPDFProvaIndividual(prova.id);
+          
+          if (!pdf || pdf.length === 0) {
+            continue;
+          }
+          
           archive.append(pdf, { name: `prova-${prova.numero}.pdf` });
         } catch (e) {
-          console.warn(`[ProvaIndividualController.downloadZip] Erro ao gerar PDF ${prova.numero}:`, e);
+          console.error(`Erro ao processar PDF ${prova.numero}:`, e);
         }
       }
 
       // Adicionar CSV com gabarito
       try {
         const csv = await relatorioProvaService.gerarCSVGabarito(id);
-        archive.append(csv, { name: 'gabarito.csv' });
+        
+        if (csv && csv.length > 0) {
+          archive.append(csv, { name: 'gabarito.csv' });
+        }
       } catch (e) {
-        console.warn('[ProvaIndividualController.downloadZip] Erro ao gerar CSV:', e);
+        console.error('Erro ao gerar CSV:', e);
       }
 
       await archive.finalize();
