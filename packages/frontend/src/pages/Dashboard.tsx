@@ -37,12 +37,6 @@ export const Dashboard: FC = () => {
       color: '#2e7d32',
     },
     {
-      label: 'PDFs Gerados',
-      value: 0,
-      icon: BarChartIcon,
-      color: '#9c27b0',
-    },
-    {
       label: 'Correções Processadas',
       value: 0,
       icon: ZapIcon,
@@ -69,19 +63,11 @@ export const Dashboard: FC = () => {
     },
     {
       number: 3,
-      title: 'Embaralhar',
-      description: 'Configure o embaralhamento de questões e alternativas',
-      icon: ZapIcon,
-      status: 'pending',
-      action: () => {},
-    },
-    {
-      number: 4,
       title: 'Gerar PDF',
-      description: 'Exporte a prova em PDF pronta para impressão',
+      description: 'Selecione visualizar prova e depois gerar provas individuais',
       icon: BarChartIcon,
-      status: 'pending',
-      action: () => {},
+      status: 'ready',
+      action: () => navigate('/provas'),
     },
   ];
 
