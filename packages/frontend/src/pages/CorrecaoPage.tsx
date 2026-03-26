@@ -174,6 +174,44 @@ export const CorrecaoPage = () => {
         </Stack>
       </Box>
 
+      {/* Section: Exemplo de Arquivo de Respostas */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }}>
+          📋 Exemplo de Arquivo de Respostas
+        </Typography>
+        <Card sx={{ boxShadow: 3, borderRadius: 2, backgroundColor: '#f9f9f9' }}>
+          <CardContent>
+            <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+              O arquivo de respostas deve conter: Prova, Questões (Q1-Q5), Nome e CPF do aluno:
+            </Typography>
+            <Box
+              sx={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #ddd',
+                borderRadius: 1,
+                p: 2,
+                fontFamily: 'monospace',
+                fontSize: '0.85rem',
+                overflow: 'auto',
+                maxHeight: '150px',
+              }}
+            >
+              <div style={{ color: '#666', lineHeight: '1.6' }}>
+                <div style={{ color: '#2e7d32', fontWeight: 'bold' }}>
+                  Prova,Q1,Q2,Q3,Q4,Q5, Nome, CPF
+                </div>
+                <div>3,A,E,E,E,C, João da Silva, 123.456.789-00</div>
+                <div>2,D,B,A,B,A, Maria Santos, 98765432100</div>
+                <div>1,E,C,D,E,C, Pedro Oliveira, 55566677788</div>
+              </div>
+            </Box>
+            <Typography variant="caption" sx={{ display: 'block', mt: 2, color: 'text.secondary' }}>
+              💡 <strong>Dica:</strong> Nome e CPF nas últimas 2 colunas - eles identificarão cada aluno no relatório!
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
+
       {/* Section: Modo de Correção */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }}>
