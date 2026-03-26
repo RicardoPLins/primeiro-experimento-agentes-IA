@@ -55,60 +55,6 @@ function App() {
               <Route path="/correcao" element={<CorrecaoPage />} />
               <Route path="/resultado-correcao" element={<ResultadoCorrecaoPage />} />
               <Route path="/relatorios" element={<RelatoriosPage />} />
-              
-              {/* Seções em desenvolvimento */}
-              <Route
-                path="/pdf/:id"
-                element={
-                  <Box
-                    sx={{
-                      p: 6,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      height: '100%',
-                    }}
-                  >
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Box sx={{ fontSize: '4rem', mb: 2 }}>🖨️</Box>
-                      <Box sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#333', mb: 1 }}>
-                        Gerador de PDF
-                      </Box>
-                      <Box sx={{ color: '#666' }}>
-                        Esta funcionalidade está em desenvolvimento
-                      </Box>
-                    </Box>
-                  </Box>
-                }
-              />
-              <Route
-                path="/correcao"
-                element={<CorrecaoPage />}
-              />
-              <Route
-                path="/relatorio"
-                element={
-                  <Box
-                    sx={{
-                      p: 6,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      height: '100%',
-                    }}
-                  >
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Box sx={{ fontSize: '4rem', mb: 2 }}>📊</Box>
-                      <Box sx={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#333', mb: 1 }}>
-                        Relatórios
-                      </Box>
-                      <Box sx={{ color: '#666' }}>
-                        Esta funcionalidade está em desenvolvimento
-                      </Box>
-                    </Box>
-                  </Box>
-                }
-              />
             </Routes>
           </Box>
         </Box>

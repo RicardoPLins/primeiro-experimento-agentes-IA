@@ -15,7 +15,6 @@ import {
   ArrowBack as ArrowBackIcon,
   Edit as EditIcon,
   Print as PrintIcon,
-  CreateNewFolder as CreateNewFolderIcon,
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -169,18 +168,6 @@ export const VisualizarProva: FC = () => {
                 }}
               >
                 Gerar Provas Individuais
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<CreateNewFolderIcon />}
-                onClick={() => navigate(`/prova-individual/${prova.id}`)}
-                sx={{
-                  background: 'linear-gradient(135deg, #9c27b0 0%, #673ab7 100%)',
-                  textTransform: 'none',
-                  fontWeight: 'bold',
-                }}
-              >
-                Criar Instância
               </Button>
             </Box>
           </Paper>

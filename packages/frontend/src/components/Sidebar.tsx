@@ -4,9 +4,7 @@ import {
   Home as HomeIcon,
   LibraryBooks as BookOpenIcon,
   Description as FileTextIcon,
-  Print as PrinterIcon,
   CheckBox as CheckSquareIcon,
-  BarChart as BarChartIcon,
   Settings as SettingsIcon,
   Help as HelpCircleIcon,
 } from '@mui/icons-material';
@@ -30,9 +28,7 @@ export const Sidebar: FC = () => {
     { icon: HomeIcon, label: 'Dashboard', path: '/' },
     { icon: BookOpenIcon, label: 'Questões', path: '/questoes' },
     { icon: FileTextIcon, label: 'Provas', path: '/provas' },
-    { icon: PrinterIcon, label: 'Gerar PDF', path: '/pdf/1' },
     { icon: CheckSquareIcon, label: 'Correção', path: '/correcao' },
-    { icon: BarChartIcon, label: 'Relatório', path: '/relatorios' },
   ];
 
   const secondaryItems = [
