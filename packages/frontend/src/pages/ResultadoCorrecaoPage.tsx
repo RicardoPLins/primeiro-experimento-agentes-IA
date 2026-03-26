@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -20,6 +20,7 @@ import {
 import { RelatorioNotas } from '@gerenciador-provas/shared';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { useRelatorios } from '../hooks/useRelatorios';
 
 interface ResultadoCorrecaoState {
   relatorios: RelatorioNotas[];
@@ -37,10 +38,18 @@ interface ResultadoCorrecaoState {
 export const ResultadoCorrecaoPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { salvarRelatorios } = useRelatorios();
 
   const state = location.state as ResultadoCorrecaoState;
 
   const { relatorios = [], estatisticas = {}, totalRelatorios = 0, modoCorrecao = '' } = state || {};
+
+  // Salvar relatórios automaticamente ao carregar a página
+  useEffect(() => {
+    if (relatorios.length > 0) {
+      salvarRelatorios(relatorios);
+    }
+  }, []);
 
   const handleVoltar = () => {
     navigate('/correcao');
@@ -49,14 +58,13 @@ export const ResultadoCorrecaoPage: React.FC = () => {
   const handleExportarCSV = () => {
     if (!relatorios.length) return;
 
-    const linhas = ['Email,Nome,Nota Final,Total Questões,Acertos'];
+    const linhas = ['Nome,CPF,Nota Final,Total Questões,Acertos'];
 
     for (const relatorio of relatorios) {
       const totalQuestoes = relatorio.notas.length;
       const acertos = relatorio.notas.filter((n) => n.nota > 0).length;
-      const nome = relatorio.nome || 'N/A';
 
-      linhas.push(`${relatorio.email},${nome},${relatorio.notaFinal.toFixed(2)},${totalQuestoes},${acertos}`);
+      linhas.push(`${relatorio.nome || 'N/A'},${relatorio.cpf || 'N/A'},${relatorio.notaFinal.toFixed(2)},${totalQuestoes},${acertos}`);
     }
 
     const csv = linhas.join('\n');
@@ -170,8 +178,8 @@ export const ResultadoCorrecaoPage: React.FC = () => {
         <Table>
           <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Nome</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>CPF</TableCell>
               <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                 Total Questões
               </TableCell>
@@ -192,8 +200,8 @@ export const ResultadoCorrecaoPage: React.FC = () => {
 
               return (
                 <TableRow key={idx} hover>
-                  <TableCell>{relatorio.email}</TableCell>
-                  <TableCell>{relatorio.nome || 'N/A'}</TableCell>
+                  <TableCell sx={{ fontWeight: '500' }}>{relatorio.nome || 'N/A'}</TableCell>
+                  <TableCell>{relatorio.cpf || 'N/A'}</TableCell>
                   <TableCell align="center">{totalQuestoes}</TableCell>
                   <TableCell align="center" sx={{ fontWeight: 'bold', color: '#4caf50' }}>
                     {acertos}

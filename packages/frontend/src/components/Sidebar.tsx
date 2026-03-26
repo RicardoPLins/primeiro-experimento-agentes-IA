@@ -32,7 +32,7 @@ export const Sidebar: FC = () => {
     { icon: FileTextIcon, label: 'Provas', path: '/provas' },
     { icon: PrinterIcon, label: 'Gerar PDF', path: '/pdf/1' },
     { icon: CheckSquareIcon, label: 'Correção', path: '/correcao' },
-    { icon: BarChartIcon, label: 'Relatório', path: '/relatorio' },
+    { icon: BarChartIcon, label: 'Relatório', path: '/relatorios' },
   ];
 
   const secondaryItems = [

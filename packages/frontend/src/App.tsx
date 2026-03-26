@@ -13,6 +13,7 @@ import { ProvaIndividualPage } from './pages/ProvaIndividualPage';
 import { GerarProvasIndividuaisPage } from './pages/GerarProvasIndividuaisPage';
 import { CorrecaoPage } from './pages/CorrecaoPage';
 import { ResultadoCorrecaoPage } from './pages/ResultadoCorrecaoPage';
+import { RelatoriosPage } from './pages/RelatoriosPage';
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ function App() {
               {/* Correção */}
               <Route path="/correcao" element={<CorrecaoPage />} />
               <Route path="/resultado-correcao" element={<ResultadoCorrecaoPage />} />
+              <Route path="/relatorios" element={<RelatoriosPage />} />
               
               {/* Seções em desenvolvimento */}
               <Route

@@ -71,17 +71,17 @@ export class CorrecaoService {
 
   /**
    * Parser simples para CSV de Respostas
-   * Formato: Prova,Q1,Q2,Q3,Q4,Q5
-   *          1,E,C,D,E,C
+   * Formato: Prova,Q1,Q2,Q3,Q4,Q5,Nome,CPF
+   *          1,E,C,D,E,C,João Silva,12345678900
    */
-  private parseCSVRespostasSimples(conteudoCSV: string): Array<{ prova: string; respostas: string[] }> {
+  private parseCSVRespostasSimples(conteudoCSV: string): Array<{ prova: string; respostas: string[]; nome: string; cpf: string }> {
     try {
       const linhas = conteudoCSV.trim().split('\n');
       if (linhas.length < 2) {
         throw new ValidationError('CSV de respostas vazio ou inválido', {});
       }
 
-      const respostas: Array<{ prova: string; respostas: string[] }> = [];
+      const respostas: Array<{ prova: string; respostas: string[]; nome: string; cpf: string }> = [];
 
       // Pular cabeçalho
       for (let i = 1; i < linhas.length; i++) {
@@ -96,12 +96,20 @@ export class CorrecaoService {
           continue;
         }
 
-        const respostasAluno = partes.slice(1);
+        // Os dois últimos campos são Nome e CPF
+        const cpf = partes[partes.length - 1];
+        const nome = partes[partes.length - 2];
+        
+        // Respostas são as colunas do meio (1 até antes do penúltimo)
+        const respostasAluno = partes.slice(1, partes.length - 2);
+
         respostas.push({
           prova: numeroProva,
           respostas: respostasAluno,
+          nome: nome || 'N/A',
+          cpf: cpf || 'N/A',
         });
-        console.log(`[parseCSVRespostasSimples] Prova ${numeroProva}: ${respostasAluno.join(',')}`);
+        console.log(`[parseCSVRespostasSimples] Prova ${numeroProva} - ${nome} (${cpf}): ${respostasAluno.join(',')}`);
       }
 
       console.log(`[parseCSVRespostasSimples] ✅ Parseado ${respostas.length} linhas`);
@@ -178,9 +186,9 @@ export class CorrecaoService {
 
           const relatorio: RelatorioNotas = {
             id: `${provaId}-${numeroProva}-${index}`,
-            email: `prova-${numeroProva}`,
-            nome: `Prova ${numeroProva}`,
-            cpf: undefined,
+            email: `prova-${numeroProva}-${respostaLinha.cpf}`,
+            nome: respostaLinha.nome,
+            cpf: respostaLinha.cpf,
             notaFinal: parseFloat(porcentagem.toFixed(2)),
             notas: Array(totalQuestoes).fill(null).map((_, i) => ({
               questaoIndex: i,
@@ -192,7 +200,7 @@ export class CorrecaoService {
           };
 
           relatórios.push(relatorio);
-          console.log(`✅ Prova ${numeroProva}: ${acertos}/${totalQuestoes} acertos (${porcentagem.toFixed(2)}%)\n`);
+          console.log(`✅ ${respostaLinha.nome} (Prova ${numeroProva}): ${acertos}/${totalQuestoes} acertos (${porcentagem.toFixed(2)}%)\n`);
 
           index++;
         } catch (error) {
