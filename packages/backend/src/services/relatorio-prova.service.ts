@@ -181,7 +181,11 @@ export class RelatorioProvaService {
       // Dados de cada prova
       let gabaritoCount = 0;
       for (const provaIndividual of provasIndividuais) {
+        console.log(`[RelatorioProvaService.gerarCSVGabarito] 🔍 Buscando gabarito para prova individual ${provaIndividual.numero}`);
+        console.log(`[RelatorioProvaService.gerarCSVGabarito]    provaIndividualId: ${provaIndividual.id}`);
+        
         const gabarito = await gabaritoRepository.buscarPorProvaIndividual(provaIndividual.id);
+        console.log(`[RelatorioProvaService.gerarCSVGabarito]    Resultado: ${gabarito ? 'ENCONTRADO' : 'NÃO ENCONTRADO'}`);
         
         if (!gabarito) {
           console.warn(`[RelatorioProvaService.gerarCSVGabarito] ⚠️  Gabarito NÃO encontrado para prova individual ${provaIndividual.numero}`);
@@ -196,16 +200,20 @@ export class RelatorioProvaService {
 
         gabaritoCount++;
         
-        const respostasStr = gabarito.respostas && gabarito.respostas.length > 0 ? gabarito.respostas.join('') : '(vazio)';
-        console.log(`[RelatorioProvaService.gerarCSVGabarito]   Prova ${provaIndividual.numero}: ${respostasStr}`);
+        console.log(`[RelatorioProvaService.gerarCSVGabarito] ✅ Gabarito encontrado`);
+        console.log(`[RelatorioProvaService.gerarCSVGabarito]    ID: ${gabarito.id}`);
+        console.log(`[RelatorioProvaService.gerarCSVGabarito]    respostas array: [${gabarito.respostas.join(', ')}]`);
+        console.log(`[RelatorioProvaService.gerarCSVGabarito]    respostas length: ${gabarito.respostas.length}`);
 
         const linha = [provaIndividual.numero.toString()];
         
-        // Adicionar respostas (podem estar vazias)
+        // Adicionar respostas (uma coluna por resposta)
         if (gabarito.respostas && gabarito.respostas.length > 0) {
           linha.push(...gabarito.respostas);
+          console.log(`[RelatorioProvaService.gerarCSVGabarito] 📝 Linha montada: [${linha.join(', ')}]`);
         } else {
           // Se vazio, adicionar células vazias
+          console.warn(`[RelatorioProvaService.gerarCSVGabarito] ⚠️  respostas array vazio!`);
           for (let i = 0; i < questoesCount; i++) {
             linha.push('');
           }

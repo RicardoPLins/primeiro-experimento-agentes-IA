@@ -99,22 +99,20 @@ export class ProvaIndividualService {
       });
     }
 
-    const provaIndividualId = uuidv4();
     const provaIndividual: ProvaIndividual = {
-      id: provaIndividualId,
       provaId: prova.id,
       numero,
       questoesEmbaralhadas: questoesProcessadas,
       sementes: {},
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    } as ProvaIndividual;
 
-    // Salvar prova individual
-    await provaIndividualRepository.criar(provaIndividual);
+    // Salvar prova individual e obter a versão salva com ID
+    const provaIndividualSalva = await provaIndividualRepository.criar(provaIndividual);
 
-    // Gerar e salvar gabarito
-    await this.gerarGabarito(provaIndividual, prova, numero);
+    console.log(`[gerarProvaIndividual] ✅ Prova Individual salva com ID: ${provaIndividualSalva.id}`);
+
+    // Gerar e salvar gabarito com a prova SALVA (que possui ID do banco)
+    await this.gerarGabarito(provaIndividualSalva, prova, numero);
 
     return provaIndividual;
   }
@@ -150,44 +148,69 @@ export class ProvaIndividualService {
       console.log(`[gerarGabarito]   Alternativas: ${questao.alternativas.length}`);
       console.log(`[gerarGabarito]   Tipo de Identificação: ${questao.tipoIdentificacao}`);
 
-      // Encontrar qual alternativa é a correta na ordem ORIGINAL
-      let indiceCorretoOriginal = -1;
+      // Encontrar TODAS as alternativas corretas na ordem ORIGINAL
+      const indicesCorretos: number[] = [];
       for (let i = 0; i < questao.alternativas.length; i++) {
         if (questao.alternativas[i].isCorreta) {
-          indiceCorretoOriginal = i;
-          break;
+          indicesCorretos.push(i);
+          console.log(`[gerarGabarito]   ✓ Alternativa ${i} marcada como correta: "${questao.alternativas[i].descricao}"`);
         }
       }
 
-      if (indiceCorretoOriginal === -1) {
+      if (indicesCorretos.length === 0) {
         console.warn(`[gerarGabarito]   ❌ Nenhuma alternativa correta encontrada`);
         continue;
       }
 
-      console.log(`[gerarGabarito]   Índice correto original: ${indiceCorretoOriginal}`);
+      console.log(`[gerarGabarito]   Índices corretos originais: [${indicesCorretos.join(', ')}]`);
       console.log(`[gerarGabarito]   alternativasEmbaralhadas: [${questaoEmbaralhada.alternativasEmbaralhadas.join(', ')}]`);
 
-      // Encontrar a posição do índice correto original no array embaralhado
-      // alternativasEmbaralhadas contém os índices originais na nova ordem
-      const posicaoNovoIndice = questaoEmbaralhada.alternativasEmbaralhadas.indexOf(
-        `${indiceCorretoOriginal}`
-      );
+      // Para POTENCIAS_DE_2, calcular soma; para LETRAS, usar primeira
+      let resposta: string;
 
-      if (posicaoNovoIndice === -1) {
-        console.warn(`[gerarGabarito]   ❌ Índice correto ${indiceCorretoOriginal} NÃO ENCONTRADO`);
-        continue;
+      if (questao.tipoIdentificacao === 'POTENCIAS_DE_2') {
+        // Calcular SOMA de todas as alternativas corretas
+        let soma = 0;
+        const posicoesCorretas: number[] = [];
+
+        for (const indiceCorreto of indicesCorretos) {
+          const posicaoNovoIndice = questaoEmbaralhada.alternativasEmbaralhadas.indexOf(
+            `${indiceCorreto}`
+          );
+
+          if (posicaoNovoIndice === -1) {
+            console.warn(`[gerarGabarito]   ⚠️  Índice correto ${indiceCorreto} NÃO ENCONTRADO no embaralhamento`);
+            continue;
+          }
+
+          posicoesCorretas.push(posicaoNovoIndice);
+          soma += potenciasde2[posicaoNovoIndice];
+          console.log(`[gerarGabarito]   ✓ Índice ${indiceCorreto} → posição ${posicaoNovoIndice} → valor ${potenciasde2[posicaoNovoIndice]}`);
+        }
+
+        resposta = String(soma);
+        console.log(`[gerarGabarito]   ✅ Resposta SOMA: ${resposta} (valores: [${posicoesCorretas.map(p => potenciasde2[p]).join(', ')}])`);
+      } else {
+        // Para LETRAS: usar PRIMEIRA alternativa correta
+        if (indicesCorretos.length > 1) {
+          console.warn(`[gerarGabarito]   ⚠️  LETRAS tem ${indicesCorretos.length} corretas, usando primeira`);
+        }
+
+        const indiceCorreto = indicesCorretos[0];
+        const posicaoNovoIndice = questaoEmbaralhada.alternativasEmbaralhadas.indexOf(
+          `${indiceCorreto}`
+        );
+
+        if (posicaoNovoIndice === -1) {
+          console.warn(`[gerarGabarito]   ❌ Índice correto ${indiceCorreto} NÃO ENCONTRADO`);
+          continue;
+        }
+
+        resposta = String.fromCharCode(65 + posicaoNovoIndice);
+        console.log(`[gerarGabarito]   ✅ Resposta LETRA: ${resposta} (posição ${posicaoNovoIndice})`);
       }
-
-      // Converter para letra ou número baseado no tipo de identificação
-      const resposta = questao.tipoIdentificacao === 'POTENCIAS_DE_2' 
-        ? String(potenciasde2[posicaoNovoIndice])
-        : String.fromCharCode(65 + posicaoNovoIndice);
       
       respostas.push(resposta);
-
-      console.log(
-        `[gerarGabarito]   ✅ Resposta: ${resposta} (posição ${posicaoNovoIndice})`
-      );
     }
 
     console.log(`\n[gerarGabarito] FINAL: Prova ${numero} - Respostas: [${respostas.join(', ')}]`);
@@ -204,9 +227,16 @@ export class ProvaIndividualService {
       modo: prova.identificacao || 'LETRAS',
     };
 
-    console.log(`[gerarGabarito] 💾 Salvando gabarito: Prova ${numero}, Respostas: [${gabarito.respostas.join(',')}]`);
+    console.log(`[gerarGabarito] 💾 Salvando gabarito:`);
+    console.log(`[gerarGabarito]    id: ${gabarito.id}`);
+    console.log(`[gerarGabarito]    provaIndividualId: ${gabarito.provaIndividualId}`);
+    console.log(`[gerarGabarito]    numero: ${gabarito.numero}`);
+    console.log(`[gerarGabarito]    respostas: [${gabarito.respostas.join(',')}]`);
+    console.log(`[gerarGabarito]    modo: ${gabarito.modo}`);
+    
     const result = await gabaritoRepository.criar(gabarito);
-    console.log(`[gerarGabarito] ✅ Gabarito salvo com sucesso. ID: ${result.id}`);
+    console.log(`[gerarGabarito] ✅ Gabarito salvo com sucesso!`);
+    console.log(`[gerarGabarito]    ID Retornado: ${result.id}`);
   }
 
   /**

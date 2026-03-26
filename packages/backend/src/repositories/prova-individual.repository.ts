@@ -14,7 +14,7 @@ export class ProvaIndividualRepository {
   ): Promise<ProvaIndividual> {
     const provaComId: ProvaIndividual = {
       ...provaIndividual,
-      id: uuidv4(),
+      id: (provaIndividual as any).id || uuidv4(),  // Usar ID se já existir, caso contrário gerar
       createdAt: new Date(),
       updatedAt: new Date(),
     };
