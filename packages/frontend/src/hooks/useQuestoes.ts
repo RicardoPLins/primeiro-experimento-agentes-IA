@@ -38,8 +38,9 @@ export function useCriarQuestao() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json() as Promise<Questao>;
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || `HTTP ${res.status}`);
+      return json as Promise<Questao>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['questoes'] });
@@ -57,8 +58,9 @@ export function useAtualizarQuestao(id: string) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json() as Promise<Questao>;
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || `HTTP ${res.status}`);
+      return json as Promise<Questao>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['questoes'] });
@@ -73,8 +75,17 @@ export function useDeletarQuestao() {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`${API_URL}/questoes/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
+      
+      // 204 No Content não tem body
+      if (res.status === 204) {
+        return { success: true };
+      }
+      
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || `HTTP ${res.status}`);
+      }
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['questoes'] });

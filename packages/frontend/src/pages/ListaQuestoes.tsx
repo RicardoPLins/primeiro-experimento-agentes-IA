@@ -41,8 +41,9 @@ export const ListaQuestoes: FC = () => {
       try {
         await deletarMutation.mutateAsync(id);
         showToast('Questão deletada!', 'success');
-      } catch {
-        showToast('Erro ao deletar', 'error');
+      } catch (error) {
+        const mensagem = error instanceof Error ? error.message : 'Erro ao deletar';
+        showToast(mensagem, 'error');
       }
     }
   };

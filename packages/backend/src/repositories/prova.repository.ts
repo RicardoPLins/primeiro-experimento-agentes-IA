@@ -108,7 +108,7 @@ export class ProvaRepository {
    * INV-BKD-08: Integridade referencial na camada de service
    */
   async questaoEstaVinculada(questaoId: string): Promise<boolean> {
-    const count = await ProvaModel.countDocuments({ questoes: questaoId });
+    const count = await ProvaModel.countDocuments({ questoes: { $in: [questaoId] } });
     return count > 0;
   }
 
